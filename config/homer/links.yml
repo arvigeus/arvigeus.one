@@ -1,0 +1,30 @@
+---
+title: "Links"
+subtitle: "arvigeus"
+logo: "logo.png"
+# icon: "fas fa-skull-crossbones" # Optional icon
+
+header: false
+footer: false
+
+services:
+  - name: "Resources"
+    icon: "fas fa-bookmark"
+    items:
+      - name: "r/selfhosted"
+        logo: "assets/icons/r_selfhosted.png"
+        subtitle: "Self-Hosted Alternatives to Popular Services"
+        tag: "reddit"
+        url: "https://www.reddit.com/r/selfhosted/"
+
+      - name: "awesome-selfhosted"
+        logo: "assets/icons/awesome.svg"
+        subtitle: "A list of Free Software network services and web applications which can be hosted on your own servers"
+        tag: "github"
+        url: "https://github.com/awesome-selfhosted/awesome-selfhosted"
+
+      - name: "StarWhiz / docker_deployment_notes"
+        logo: "assets/icons/github.png"
+        subtitle: "Caddy v2 examples and guide"
+        tag: "github"
+        url: "https://github.com/StarWhiz/docker_deployment_notes"

@@ -1,0 +1,277 @@
+version: "3.7"
+services:
+  caddy:
+    image: caddy
+    container_name: caddy
+    restart: unless-stopped
+    hostname: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - DOMAIN
+      - HETZNER_API_TOKEN
+      - BASICAUTH_USER
+      - BASICAUTH_PASS
+    volumes:
+      - ${CONFIG}/caddy/caddy:/usr/bin/caddy:ro
+      - ${CONFIG}/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${DATA}/caddy/data:/data
+      - ${DATA}/caddy/config:/config
+      - ${CONFIG}/nextcloud/zzz-custom.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
+      - ${DATA}/nextcloud:/var/www/html
+    links:
+      - nextcloud
+
+  dozzle:
+    image: amir20/dozzle:latest # v3.8.2
+    container_name: dozzle
+    restart: unless-stopped
+    hostname: dozzle
+    environment:
+      # DOZZLE_LEVEL: debug
+      DOZZLE_TAILSIZE: 300
+      DOZZLE_FILTER: "status=running"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  homer:
+    image: b4bz/homer:latest # 21.09.2
+    container_name: homer
+    restart: unless-stopped
+    hostname: homer
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${CONFIG}/homer/:/www/assets:ro
+
+  postgres:
+    image: postgres:alpine
+    hostname: postgres
+    container_name: postgres
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/postgres:/var/lib/postgresql/data
+      - ${CONFIG}/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "miniflux"] # Last db in the list
+      interval: 10s
+      start_period: 30s
+    environment:
+      - POSTGRES_MULTIPLE_DATABASES=nextcloud,planka,miniflux
+      - POSTGRES_USER=${USER}
+      - POSTGRES_PASSWORD=${PASSWORD}
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  redis:
+    restart: unless-stopped
+    image: redis:alpine
+    container_name: redis
+    hostname: redis
+
+  nextcloud:
+    restart: unless-stopped
+    image: nextcloud:fpm-alpine
+    container_name: nextcloud
+    hostname: nextcloud
+    depends_on:
+      - redis
+      - postgres
+    environment:
+      - NEXTCLOUD_ADMIN_USER=arvigeus
+      - NEXTCLOUD_ADMIN_PASSWORD=StrongAndComplicatedPassword
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=nextcloud
+      - POSTGRES_USER=nextcloud
+      - POSTGRES_PASSWORD=nextcloud
+      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN} caddy
+      - REDIS_HOST=redis
+    volumes:
+      - ${CONFIG}/nextcloud/zzz-custom.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
+      - ${DATA}/nextcloud:/var/www/html
+  # DAV: https://cloud.arvigeus.one/remote.php/webdav
+
+  nextcloud-cron:
+    restart: unless-stopped
+    image: nextcloud:fpm-alpine
+    container_name: nextcloud-cron
+    depends_on:
+      - redis
+      - postgres
+    entrypoint: /cron.sh
+    volumes:
+      - ${DATA}/nextcloud:/var/www/html
+
+  filestash:
+    image: machines/filestash # 635c75a
+    container_name: filestash
+    restart: always
+    hostname: filestash
+    environment:
+      - APPLICATION_URL=files.arvigeus.one
+      - GDRIVE_CLIENT_ID=${GDRIVE_CLIENT_ID}
+      - GDRIVE_CLIENT_SECRET=${GDRIVE_CLIENT_SECRET}
+      - DROPBOX_CLIENT_ID=${DROPBOX_CLIENT_ID}
+      - ONLYOFFICE_URL=http://onlyoffice
+    volumes:
+      - ${DATA}/filestash:/app/data/state
+
+  onlyoffice:
+    image: onlyoffice/documentserver # 6.4
+    container_name: filestash_oods
+    hostname: onlyoffice
+    restart: always
+
+  kavita:
+    image: kizaing/kavita:latest # 0.4.7
+    container_name: kavita
+    restart: unless-stopped
+    hostname: kavita
+    volumes:
+      - ${DATA}/kavita:/kavita/data
+      - ${MEDIA}:/media
+    depends_on:
+      - nextcloud
+
+  planka:
+    image: meltyshev/planka:latest # 0.1.6
+    container_name: planka
+    hostname: planka
+    command: >
+      bash -c
+        "for i in `seq 1 30`; do
+          ./start.sh &&
+          s=$$? && break || s=$$?;
+          echo \"Tried $$i times. Waiting 5 seconds...\";
+          sleep 5;
+        done; (exit $$s)"
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/planka/user-avatars:/app/public/user-avatars
+      - ${DATA}/planka/project-background-images:/app/public/project-background-images
+      - ${DATA}/planka/attachments:/app/public/attachments
+    environment:
+      - BASE_URL=https://kanban.${DOMAIN}
+      - TRUST_PROXY=0
+      - DATABASE_URL=postgresql://planka:planka@postgres/planka
+      - SECRET_KEY=${PLANKA_SECRET_KEY}
+    depends_on:
+      - postgres
+
+  vaultwarden:
+    image: vaultwarden/server:latest # 1.22.2
+    container_name: vaultwarden
+    hostname: vaultwarden
+    restart: unless-stopped
+    environment:
+      - SIGNUPS_ALLOWED=true # Change to false after first login
+      - INVITATIONS_ALLOWED=true # Send invitation using admin page
+      - WEBSOCKET_ENABLED=true
+      - DOMAIN=https://vault.$DOMAIN
+      - LOG_FILE=/var/log/docker/bitwarden.log
+      - SMTP_SSL=$SMTP_SSL
+      - SMTP_EXPLICIT_TLS=$SMTP_EXPLICIT_TLS
+      - SMTP_HOST=$SMTP_HOST
+      - SMTP_PORT=$SMTP_PORT
+      - SMTP_FROM=$SMTP_FROM
+      - SMTP_USERNAME=$SMTP_USERNAME
+      - SMTP_PASSWORD=$SMTP_PASSWORD
+    volumes:
+      - ${DATA}/vaultwarden/:/data/
+      - /var/log/docker:/var/log/docker
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  ## To restore database from backup:
+  # docker exec -it bitwarden bash
+  # mv /data/db.sqlite3 /data/db.sqlite3.back
+  # sqlite3 /data/db.sqlite3 ".restore '/data/db-backup/select_db_file'"
+  # exit
+  # bw_backup:
+  #   container_name: bw_backup
+  #   image: bruceforce/bw_backup
+  #   restart: on-failure
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   init: true
+  #   depends_on:
+  #     - bitwarden
+  #   volumes:
+  #     - ${DATA}/vaultwarden:/data
+  #     - ${BACKUP}/backup_databases/bitwarden:/dbbackup
+  #     - /etc/timezone:/etc/timezone:ro
+  #     - /etc/localtime:/etc/localtime:ro
+  #   environment:
+  #     - DB_FILE=/data/db.sqlite3
+  #     - BACKUP_FILE=/dbbackup/backup.sqlite3
+  #     - CRON_TIME=30 4 * * *
+  #     - TIMESTAMP=true
+  #     - UID=0
+  #     - GID=0
+
+  mealie:
+    image: hkotel/mealie:latest # v0.5.2
+    container_name: mealie
+    hostname: mealie
+    restart: unless-stopped
+    environment:
+      PUID: ${PGID}
+      PGID: ${PUID}
+      TZ: ${TZ}
+      # Default Recipe Settings
+      RECIPE_PUBLIC: "true"
+      RECIPE_SHOW_NUTRITION: "true"
+      RECIPE_SHOW_ASSETS: "true"
+      RECIPE_LANDSCAPE_VIEW: "true"
+      RECIPE_DISABLE_COMMENTS: "true"
+      RECIPE_DISABLE_AMOUNT: "false"
+      DEFAULT_EMAIL: ${EMAIL}
+      DEFAULT_PASSWORD: ${PASSWORD}
+      # Gunicorn
+      WEB_CONCURRENCY: 2
+      # WORKERS_PER_CORE: 0.5
+      # MAX_WORKERS: 8
+    volumes:
+      - ${DATA}/mealie:/app/data
+
+  rss-bridge:
+    image: rssbridge/rss-bridge:latest
+    container_name: rss-bridge
+    hostname: rss-bridge
+    restart: unless-stopped
+    volumes:
+      - ${CONFIG}/rss-bridge:/config
+
+  miniflux:
+    image: miniflux/miniflux:latest
+    container_name: miniflux
+    hostname: miniflux
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - rss-bridge
+    environment:
+      - DATABASE_URL=postgresql://miniflux:miniflux@postgres/miniflux?sslmode=disable
+      - BASE_URL=https://news.${DOMAIN}
+      - RUN_MIGRATIONS=1
+      - CREATE_ADMIN=1
+      - ADMIN_USERNAME=arvigeus
+      - ADMIN_PASSWORD=StrongAndComplicatedPassword
+
+  # dim:
+  #   image: "vgarleanu/dim:latest"
+  #   devices:
+  #     - /dev/dri/card0
+  #   container_name: dim
+  #   hostname: dim
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ${DATA}/dim:/opt/dim/config
+  #     - ${MEDIA}:/media
+
+networks:
+  default:
+    external:
+      name: $DOCKER_NETWORK

@@ -1,0 +1,43 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start traefik:local",
+      "type": "shell",
+      "command": "./run.sh start-local",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "label": "Stop traefik:local",
+      "type": "shell",
+      "command": "./run.sh stop-local",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "label": "Restart traefik:local",
+      "type": "shell",
+      "command": "./run.sh restart-local",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    },
+    {
+      "label": "Setup traefik:local",
+      "type": "shell",
+      "command": "./run.sh setup-local",
+      "isBackground": true,
+      "options": {
+        "cwd": "${workspaceFolder}/"
+      }
+    }
+  ]
+}

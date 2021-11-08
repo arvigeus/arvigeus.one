@@ -1,0 +1,181 @@
+# {
+#     #acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+#     order webdav before file_server
+# }
+
+{$DOMAIN} {
+	reverse_proxy homer:8080
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+system.{$DOMAIN} {
+	reverse_proxy host.docker.internal:9090
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+logs.{$DOMAIN} {
+	reverse_proxy dozzle:8080
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+
+	basicauth {
+		# username passwd_hash
+		{$BASICAUTH_USER} {$BASICAUTH_PASS}
+	}
+}
+
+vault.{$DOMAIN} {
+	encode gzip
+
+	header {
+		# Enable cross-site filter (XSS) and tell browser to block detected attacks
+		X-XSS-Protection "1; mode=block"
+		# Disallow the site to be rendered within a frame (clickjacking protection)
+		X-Frame-Options "DENY"
+		# Prevent search engines from indexing (optional)
+		X-Robots-Tag "none"
+		# Server name removing
+		-Server
+	}
+
+	# Notifications redirected to the websockets server
+	reverse_proxy /notifications/hub vaultwarden:3012
+
+	# Proxy the Root directory to Rocket
+	reverse_proxy vaultwarden:80
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+# webdav.{$DOMAIN} {
+#     basicauth {
+#         # username passwd_hash
+#         {$BASICAUTH_USER} {$BASICAUTH_PASS}
+#     }
+#     root /* /var/www
+#     webdav /*
+# }
+
+cloud.{$DOMAIN} {
+	root * /var/www/html
+	file_server
+
+	php_fastcgi nextcloud:9000
+	header {
+		# enable HSTS
+		Strict-Transport-Security "max-age=31536000;"
+	}
+	redir /.well-known/webfinger /public.php?service=webfinger 301
+	redir /.well-known/carddav /remote.php/dav 301
+	redir /.well-known/caldav /remote.php/dav 301
+	@forbidden {
+		path /.htaccess
+		path /data/*
+		path /config/*
+		path /db_structure
+		path /.xml
+		path /README
+		path /3rdparty/*
+		path /lib/*
+		path /templates/*
+		path /occ
+		path /console.php
+	}
+	respond @forbidden 403
+
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+files.{$DOMAIN} {
+	reverse_proxy filestash:8334
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+contacts.{$DOMAIN} {
+	redir https://cloud.{$DOMAIN}/index.php/apps/contacts/{url}
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+calendar.{$DOMAIN} {
+	redir https://cloud.{$DOMAIN}/index.php/apps/calendar/{url}
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+notes.{$DOMAIN} {
+	redir https://cloud.{$DOMAIN}/index.php/apps/notes/{url}
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+music.{$DOMAIN} {
+	redir https://cloud.{$DOMAIN}/index.php/apps/music/{url}
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+kanban.{$DOMAIN} {
+	reverse_proxy planka:1337
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+photos.{$DOMAIN} {
+	redir https://cloud.{$DOMAIN}/index.php/apps/photos/{url}
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+rss.{$DOMAIN} {
+	reverse_proxy rss-bridge:80
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+
+	basicauth {
+		# username passwd_hash
+		{$BASICAUTH_USER} {$BASICAUTH_PASS}
+	}
+}
+
+news.{$DOMAIN} {
+	reverse_proxy miniflux:8080
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+recipes.{$DOMAIN} {
+	reverse_proxy mealie:80
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+books.{$DOMAIN} {
+	reverse_proxy kavita:5000
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+# media.{$DOMAIN} {
+#         reverse_proxy dim:8000
+# }
