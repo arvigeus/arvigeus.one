@@ -71,7 +71,7 @@ sudo chmod +x run.sh
 
 ### Server
 
-**Make sure volumes for `filestash` are commented out, also the media volumes for `kavita` and `dim`!**
+**Make sure volumes for `filestash`, `kavita`, `dim`, `koel` are commented out!**
 
 ```sh
 # First time run
@@ -81,9 +81,13 @@ sudo chmod +x run.sh
 ./run.sh start
 ./run.sh stop
 ./run.sh restart
+./run.sh update
 
 # A manual hack for extra tweaks
 ./run.sh post-setup
+
+# Other
+./run.sh info IMAGE_NAME
 ```
 
 ## Databases

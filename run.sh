@@ -33,11 +33,15 @@ function setup {
     sudo ufw allow 443/tcp comment "caddy"
     sudo ufw allow 80/tcp comment "caddy"
     sudo ufw allow 22/tcp comment 'Open port ssh tcp port 22'
+    sudo ufw allow 51820/udp comment 'Wireguard'
     sudo ufw allow 9090/tcp comment 'Cockpit'
     sudo ufw enable
 
     # Postgres
     sudo chmod +x $CONFIG/postgres/docker-entrypoint-initdb.d/create-multiple-postgresql-databases.sh
+
+    # Tools
+    sudo apt install jq
 }
 
 function cleanup {
@@ -75,19 +79,27 @@ function restart {
     start $*
 }
 
+function update {
+    docker-compose pull
+    docker-compose up --detach
+    docker image prune -f
+}
+
+function info {
+    docker image inspect --format '{{json .}}' "$1" | jq -r '. | {Id: .Id, Digest: .Digest, RepoDigests: .RepoDigests, Labels: .Config.Labels}'
+}
+
 function post-setup {
     docker exec -u www-data app-server php occ --no-warnings app:install calendar
     docker exec -u www-data app-server php occ --no-warnings app:install contacts
     docker exec -u www-data app-server php occ --no-warnings app:install notes
-    docker exec -u www-data app-server php occ --no-warnings app:install music
-    docker exec -u www-data app-server php occ --no-warnings app:install breezedark
 
     docker cp filestash:/app/data/state $DATA/filestash
     sudo chmod -R 777 $DATA/filestash
 
     stop $*
 
-    echo "Now uncomment volumes for `filestash`, `kavita`, `dim`, then run `./run.sh start`"
+    echo "Now uncomment volumes for `filestash`, `kavita`, `dim`, `koel`, then run `./run.sh start`"
 }
 
 function default {

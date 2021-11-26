@@ -26,7 +26,7 @@ services:
       - nextcloud
 
   dozzle:
-    image: amir20/dozzle:latest # v3.8.2
+    image: amir20/dozzle:latest
     container_name: dozzle
     restart: unless-stopped
     hostname: dozzle
@@ -38,7 +38,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   homer:
-    image: b4bz/homer:latest # 21.09.2
+    image: b4bz/homer:latest
     container_name: homer
     restart: unless-stopped
     hostname: homer
@@ -60,7 +60,7 @@ services:
       interval: 10s
       start_period: 30s
     environment:
-      - POSTGRES_MULTIPLE_DATABASES=nextcloud,planka,miniflux
+      - POSTGRES_MULTIPLE_DATABASES=nextcloud,planka,koel,miniflux
       - POSTGRES_USER=${USER}
       - POSTGRES_PASSWORD=${PASSWORD}
       - POSTGRES_HOST_AUTH_METHOD=trust
@@ -105,7 +105,7 @@ services:
       - ${DATA}/nextcloud:/var/www/html
 
   filestash:
-    image: machines/filestash # 635c75a
+    image: machines/filestash
     container_name: filestash
     restart: always
     hostname: filestash
@@ -119,24 +119,24 @@ services:
       - ${DATA}/filestash:/app/data/state
 
   onlyoffice:
-    image: onlyoffice/documentserver # 6.4
+    image: onlyoffice/documentserver
     container_name: filestash_oods
     hostname: onlyoffice
     restart: always
 
   kavita:
-    image: kizaing/kavita:latest # 0.4.7
+    image: kizaing/kavita:latest
     container_name: kavita
     restart: unless-stopped
     hostname: kavita
     volumes:
-      - ${DATA}/kavita:/kavita/data
+      - ${DATA}/kavita:/kavita/config
       - ${MEDIA}:/media
     depends_on:
       - nextcloud
 
   planka:
-    image: meltyshev/planka:latest # 0.1.6
+    image: meltyshev/planka:latest
     container_name: planka
     hostname: planka
     command: >
@@ -161,12 +161,12 @@ services:
       - postgres
 
   vaultwarden:
-    image: vaultwarden/server:latest # 1.22.2
+    image: vaultwarden/server:latest
     container_name: vaultwarden
     hostname: vaultwarden
     restart: unless-stopped
     environment:
-      - SIGNUPS_ALLOWED=true # Change to false after first login
+      - SIGNUPS_ALLOWED=false # Change to false after first login
       - INVITATIONS_ALLOWED=true # Send invitation using admin page
       - WEBSOCKET_ENABLED=true
       - DOMAIN=https://vault.$DOMAIN
@@ -212,7 +212,7 @@ services:
   #     - GID=0
 
   mealie:
-    image: hkotel/mealie:latest # v0.5.2
+    image: hkotel/mealie:latest
     container_name: mealie
     hostname: mealie
     restart: unless-stopped
@@ -259,6 +259,58 @@ services:
       - CREATE_ADMIN=1
       - ADMIN_USERNAME=arvigeus
       - ADMIN_PASSWORD=StrongAndComplicatedPassword
+
+  koel:
+    image: hyzual/koel
+    container_name: koel
+    hostname: koel
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    volumes:
+      - ${MEDIA}/Music:/music
+      - ${DATA}/koel/covers:/var/www/html/public/img/covers
+      - ${DATA}/koel/search_index:/var/www/html/storage/search-indexes
+      - ${DATA}/koel/.env:/var/www/html/.env
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_USERNAME=koel
+      - DB_PASSWORD=koel
+      - DB_DATABASE=koel
+      - FORCE_HTTPS=true
+      - APP_KEY=${KOEL_APP_KEY}
+      - LASTFM_API_KEY=${KOEL_LASTFM_API_KEY}
+      - LASTFM_API_SECRET=${KOEL_LASTFM_API_SECRET}
+      - YOUTUBE_API_KEY=${KOEL_YOUTUBE_API_KEY}
+
+  wireguard:
+    environment:
+      # ⚠️ Required:
+      # Change this to your host's public address
+      - WG_HOST=vpn.${DOMAIN}
+      # Optional:
+      - PASSWORD=${PASSWORD}
+      # - WG_PORT=51820
+      # - WG_DEFAULT_ADDRESS=10.8.0.x
+      # - WG_DEFAULT_DNS=1.1.1.1
+      # - WG_ALLOWED_IPS=192.168.15.0/24, 10.0.1.0/24
+
+    image: weejewel/wg-easy
+    container_name: wireguard
+    hostname: wireguard
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/wireguard:/etc/wireguard
+    ports:
+      - "51820:51820/udp"
+      - "51821:51821/tcp"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
 
   # dim:
   #   image: "vgarleanu/dim:latest"

@@ -61,8 +61,9 @@ services:
   - name: "Entertainment"
     icon: "fas fa-music"
     items:
-      - name: "Nextcloud Music"
-        logo: "assets/icons/nextcloud.png"
+      - name: "Koel"
+        subtitle: "A personal music streaming server that works."
+        logo: "assets/icons/koel.png"
         url: "https://music.arvigeus.one"
 
       - name: "Miniflux"
@@ -138,6 +139,11 @@ services:
         subtitle: "Password management"
         logo: "assets/icons/bitwarden.png"
         url: "https://vault.arvigeus.one"
+
+      - name: "Wireguard"
+        subtitle: "VPN"
+        logo: "assets/icons/wireguard.png"
+        url: "https://vpn.arvigeus.one"
 
       - name: "RSS Bridge"
         subtitle: "The RSS feed for websites missing it"
