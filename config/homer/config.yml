@@ -120,6 +120,11 @@ services:
         subtitle: "Recipe manager"
         url: "https://recipes.arvigeus.one"
 
+      - name: "Linkding"
+        logo: "assets/icons/linkding.png"
+        subtitle: "Minimalistic bookmarking service"
+        url: "https://bookmarks.arvigeus.one"
+
   #################################################################
 
   - name: "System"

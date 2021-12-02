@@ -183,6 +183,13 @@ vpn.{$DOMAIN} {
 	}
 }
 
+bookmarks.{$DOMAIN} {
+	reverse_proxy linkding:9090
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
 # media.{$DOMAIN} {
 #         reverse_proxy dim:8000
 # }
