@@ -155,6 +155,11 @@ services:
         logo: "assets/icons/rss-bridge.svg"
         url: "https://rss.arvigeus.one"
 
+      - name: "Inbucket"
+        subtitle: "Disposable webmail server"
+        icon: "fa-solid fa-at"
+        url: "https://mail.arvigeus.one/monitor"
+
       # - name: "WireGuard"
       #   subtitle: "VPN tunnel"
       #   logo: "assets/icons/wireguard.png"

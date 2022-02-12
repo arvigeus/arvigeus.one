@@ -190,6 +190,18 @@ bookmarks.{$DOMAIN} {
 	}
 }
 
+mail.{$DOMAIN} {
+	reverse_proxy inbucket:9000
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+
+	basicauth {
+		# username passwd_hash
+		{$BASICAUTH_USER} {$BASICAUTH_PASS}
+	}
+}
+
 # media.{$DOMAIN} {
 #         reverse_proxy dim:8000
 # }

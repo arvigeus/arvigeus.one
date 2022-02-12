@@ -35,6 +35,8 @@ function setup {
     sudo ufw allow 22/tcp comment 'Open port ssh tcp port 22'
     sudo ufw allow 51820/udp comment 'Wireguard'
     sudo ufw allow 9090/tcp comment 'Cockpit'
+    sudo ufw allow smtp comment "smtp"
+    sudo ufw allow pop3 comment "pop3"
     sudo ufw enable
 
     # Postgres

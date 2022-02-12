@@ -322,6 +322,19 @@ services:
       - LD_DISABLE_BACKGROUND_TASKS=False
       - LD_DISABLE_URL_VALIDATION=False
 
+  inbucket:
+    image: inbucket/inbucket:latest
+    container_name: inbucket
+    hostname: inbucket
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "25:2500"
+      - "110:1100"
+    environment:
+      - INBUCKET_SMTP_DOMAIN=${DOMAIN}
+      - INBUCKET_POP3_DOMAIN=${DOMAIN}
+
   # dim:
   #   image: "vgarleanu/dim:latest"
   #   devices:
