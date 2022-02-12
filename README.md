@@ -71,7 +71,7 @@ sudo chmod +x run.sh
 
 ### Server
 
-**Make sure volumes for `filestash`, `kavita`, `dim`, `koel` are commented out!**
+**Make sure volumes for `kavita`, `dim`, `koel` are commented out!**
 
 ```sh
 # First time run

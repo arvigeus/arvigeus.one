@@ -62,11 +62,31 @@ vault.{$DOMAIN} {
 #     webdav /*
 # }
 
+office.{$DOMAIN} {
+  encode gzip
+  @collabora {
+    path /loleaflet/* # Loleaflet is the client part of LibreOffice Online
+    path /hosting/discovery # WOPI discovery URL
+    path /hosting/capabilities # Show capabilities as json
+    path /lool/* # Main websocket, uploads/downloads, presentations
+  }
+  reverse_proxy @collabora collabora:9980 {
+    transport http {
+      tls_insecure_skip_verify
+    }
+  }
+}
+
 cloud.{$DOMAIN} {
+	encode zstd gzip
+
 	root * /var/www/html
 	file_server
 
-	php_fastcgi nextcloud:9000
+	php_fastcgi nextcloud:9000 {
+		env front_controller_active true # Remove index.php form url
+	}
+	
 	header {
 		# enable HSTS
 		Strict-Transport-Security "max-age=31536000;"
@@ -95,28 +115,28 @@ cloud.{$DOMAIN} {
 }
 
 files.{$DOMAIN} {
-	reverse_proxy filestash:8334
+	redir https://cloud.{$DOMAIN}/apps/files/{url}
 	tls {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}
 }
 
 contacts.{$DOMAIN} {
-	redir https://cloud.{$DOMAIN}/index.php/apps/contacts/{url}
+	redir https://cloud.{$DOMAIN}/apps/contacts/{url}
 	tls {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}
 }
 
 calendar.{$DOMAIN} {
-	redir https://cloud.{$DOMAIN}/index.php/apps/calendar/{url}
+	redir https://cloud.{$DOMAIN}/apps/calendar/{url}
 	tls {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}
 }
 
 notes.{$DOMAIN} {
-	redir https://cloud.{$DOMAIN}/index.php/apps/notes/{url}
+	redir https://cloud.{$DOMAIN}/apps/notes/{url}
 	tls {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}
@@ -137,7 +157,7 @@ kanban.{$DOMAIN} {
 }
 
 photos.{$DOMAIN} {
-	redir https://cloud.{$DOMAIN}/index.php/apps/photos/{url}
+	redir https://cloud.{$DOMAIN}/apps/photos/{url}
 	tls {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}

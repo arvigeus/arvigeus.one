@@ -86,9 +86,8 @@ services:
   - name: "Productivity"
     icon: "fas fa-desktop"
     items:
-      - name: "Filestash"
-        subtitle: "File manager"
-        logo: "assets/icons/filestash.png"
+      - name: "Nextcloud Files"
+        logo: "assets/icons/nextcloud.png"
         url: "https://files.arvigeus.one"
 
       - name: "Nextcloud Notes"

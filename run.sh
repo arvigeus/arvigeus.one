@@ -96,12 +96,9 @@ function post-setup {
     docker exec -u www-data app-server php occ --no-warnings app:install contacts
     docker exec -u www-data app-server php occ --no-warnings app:install notes
 
-    docker cp filestash:/app/data/state $DATA/filestash
-    sudo chmod -R 777 $DATA/filestash
-
     stop $*
 
-    echo "Now uncomment volumes for `filestash`, `kavita`, `dim`, `koel`, then run `./run.sh start`"
+    echo "Now uncomment volumes for `kavita`, `dim`, `koel`, then run `./run.sh start`"
 }
 
 function default {

@@ -104,25 +104,23 @@ services:
     volumes:
       - ${DATA}/nextcloud:/var/www/html
 
-  filestash:
-    image: machines/filestash
-    container_name: filestash
-    restart: always
-    hostname: filestash
-    environment:
-      - APPLICATION_URL=files.arvigeus.one
-      - GDRIVE_CLIENT_ID=${GDRIVE_CLIENT_ID}
-      - GDRIVE_CLIENT_SECRET=${GDRIVE_CLIENT_SECRET}
-      - DROPBOX_CLIENT_ID=${DROPBOX_CLIENT_ID}
-      - ONLYOFFICE_URL=http://onlyoffice
+  collabora:
+    image: collabora/code
+    container_name: collabora
+    restart: unless-stopped
+    ports:
+      - "9980:9980"
     volumes:
-      - ${DATA}/filestash:/app/data/state
-
-  onlyoffice:
-    image: onlyoffice/documentserver
-    container_name: filestash_oods
-    hostname: onlyoffice
-    restart: always
+      - /etc/localtime:/etc/localtime
+      - /etc/timezone:/etc/timezone
+    environment:
+      # - username=${USER}
+      # - password=${PASSWORD}
+      # - dictionaries=en bg
+      - domain=cloud\.${DOMAIN}
+      - extra_params=--o:net.proto=IPv4 --o:ssl.enable=true --o:ssl.termination=false # Set SSL options
+    cap_add:
+      - MKNOD
 
   kavita:
     image: kizaing/kavita:latest
