@@ -222,6 +222,13 @@ mail.{$DOMAIN} {
 	}
 }
 
+research.{$DOMAIN} {
+	reverse_proxy wallabag:80
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
 # media.{$DOMAIN} {
 #         reverse_proxy dim:8000
 # }

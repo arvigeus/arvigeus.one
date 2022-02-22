@@ -333,6 +333,19 @@ services:
       - INBUCKET_SMTP_DOMAIN=${DOMAIN}
       - INBUCKET_POP3_DOMAIN=${DOMAIN}
 
+  wallabag:
+    image: wallabag/wallabag
+    container_name: wallabag
+    hostname: wallabag
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/wallabag/data:/var/www/wallabag/data
+      - ${DATA}/wallabag/images:/var/www/wallabag/web/assets/images
+    environment:
+      - SYMFONY__ENV__DOMAIN_NAME=https://research.${DOMAIN}
+      - SYMFONY__ENV__FOSUSER_REGISTRATION=false
+      - SYMFONY__ENV__FOSUSER_CONFIRMATION=false
+
   # dim:
   #   image: "vgarleanu/dim:latest"
   #   devices:
