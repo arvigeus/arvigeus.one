@@ -142,6 +142,13 @@ notes.{$DOMAIN} {
 	}
 }
 
+joplin.{$DOMAIN} {
+	reverse_proxy joplin:22300
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
 music.{$DOMAIN} {
 	reverse_proxy koel:80
 	tls {

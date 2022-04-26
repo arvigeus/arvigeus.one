@@ -56,11 +56,11 @@ services:
       - ${DATA}/postgres:/var/lib/postgresql/data
       - ${CONFIG}/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "miniflux"] # Last db in the list
+      test: ["CMD", "pg_isready", "-U", "joplin"] # Last db in the list
       interval: 10s
       start_period: 30s
     environment:
-      - POSTGRES_MULTIPLE_DATABASES=nextcloud,planka,koel,miniflux
+      - POSTGRES_MULTIPLE_DATABASES=nextcloud,planka,koel,miniflux,joplin
       - POSTGRES_USER=${USER}
       - POSTGRES_PASSWORD=${PASSWORD}
       - POSTGRES_HOST_AUTH_METHOD=trust
@@ -118,9 +118,27 @@ services:
       # - password=${PASSWORD}
       # - dictionaries=en bg
       - domain=cloud\.${DOMAIN}
+      - server_name=office\.${DOMAIN}
       - extra_params=--o:net.proto=IPv4 --o:ssl.enable=true --o:ssl.termination=false # Set SSL options
     cap_add:
       - MKNOD
+
+  joplin:
+    image: joplin/server:latest
+    depends_on:
+      - postgres
+    container_name: joplin
+    restart: unless-stopped
+    hostname: joplin
+    environment:
+      - APP_PORT=22300
+      - APP_BASE_URL=https://joplin.${DOMAIN}
+      - DB_CLIENT=pg
+      - POSTGRES_PASSWORD=joplin
+      - POSTGRES_DATABASE=joplin
+      - POSTGRES_USER=joplin
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=postgres
 
   kavita:
     image: kizaing/kavita:latest
