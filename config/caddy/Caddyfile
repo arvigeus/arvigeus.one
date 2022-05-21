@@ -66,17 +66,17 @@ cloud.{$DOMAIN} {
 	encode zstd gzip
 
 	@collabora {
-			path /browser/* # Browser is the client part of LibreOffice Online
-			path /hosting/discovery # WOPI discovery URL
-			path /hosting/capabilities # Show capabilities as json
-			path /cool/* # Main websocket, uploads/downloads, presentations
+		path /browser/* # Browser is the client part of LibreOffice Online
+		path /hosting/discovery # WOPI discovery URL
+		path /hosting/capabilities # Show capabilities as json
+		path /cool/* # Main websocket, uploads/downloads, presentations
 	}
 
 	reverse_proxy @collabora collabora:9980 {
-			header_up Host "cloud.{$DOMAIN}"
-			transport http {
-					tls_insecure_skip_verify
-			}
+		header_up Host "cloud.{$DOMAIN}"
+		transport http {
+			tls_insecure_skip_verify
+		}
 	}
 
 	root * /var/www/html
