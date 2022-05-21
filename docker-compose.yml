@@ -71,19 +71,6 @@ services:
     container_name: redis
     hostname: redis
 
-  # nextcloud-aio-mastercontainer:
-  #   restart: unless-stopped
-  #   image: "nextcloud/all-in-one:latest"
-  #   container_name: nextcloud-aio-mastercontainer
-  #   hostname: nextcloud-aio-mastercontainer
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     - APACHE_PORT=11000
-  #   volumes:
-  #     - "${CONFIG}/nc/:/mnt/docker-aio-config"
-  #     - "/var/run/docker.sock:/var/run/docker.sock:ro"
-
   nextcloud:
     restart: unless-stopped
     image: nextcloud:fpm-alpine
