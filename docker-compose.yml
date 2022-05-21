@@ -71,6 +71,19 @@ services:
     container_name: redis
     hostname: redis
 
+  # nextcloud-aio-mastercontainer:
+  #   restart: unless-stopped
+  #   image: "nextcloud/all-in-one:latest"
+  #   container_name: nextcloud-aio-mastercontainer
+  #   hostname: nextcloud-aio-mastercontainer
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - APACHE_PORT=11000
+  #   volumes:
+  #     - "${CONFIG}/nc/:/mnt/docker-aio-config"
+  #     - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
   nextcloud:
     restart: unless-stopped
     image: nextcloud:fpm-alpine
@@ -114,14 +127,15 @@ services:
       - /etc/localtime:/etc/localtime
       - /etc/timezone:/etc/timezone
     environment:
-      # - username=${USER}
-      # - password=${PASSWORD}
-      # - dictionaries=en bg
-      - domain=cloud\.${DOMAIN}
-      - server_name=office\.${DOMAIN}
-      - extra_params=--o:net.proto=IPv4 --o:ssl.enable=true --o:ssl.termination=false # Set SSL options
+      # Credentials for /browser/dist/admin/admin.html
+      - username=${USER}
+      - password=${PASSWORD}
+      - server_name=${NEXTCLOUD_FQDN}
+      - dictionaries=en_US
+      - extra_params=--o:ssl.enable=true --o:ssl.termination=false # Set SSL options
     cap_add:
       - MKNOD
+    tty: true
 
   joplin:
     image: joplin/server:latest
@@ -152,7 +166,7 @@ services:
       - nextcloud
 
   planka:
-    image: meltyshev/planka:latest
+    image: ghcr.io/plankanban/planka:latest
     container_name: planka
     hostname: planka
     command: >
@@ -167,7 +181,7 @@ services:
     volumes:
       - ${DATA}/planka/user-avatars:/app/public/user-avatars
       - ${DATA}/planka/project-background-images:/app/public/project-background-images
-      - ${DATA}/planka/attachments:/app/public/attachments
+      - ${DATA}/planka/attachments:/app/private/attachments
     environment:
       - BASE_URL=https://kanban.${DOMAIN}
       - TRUST_PROXY=0
