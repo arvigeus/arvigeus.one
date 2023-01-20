@@ -21,7 +21,7 @@ services:
       - ${DATA}/caddy/data:/data
       - ${DATA}/caddy/config:/config
       - ${CONFIG}/nextcloud/zzz-custom.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
-      - ${DATA}/nextcloud:/var/www/html
+      - ${DATA}/nextcloud/app:/var/www/html
     links:
       - nextcloud
 
@@ -47,29 +47,29 @@ services:
     volumes:
       - ${CONFIG}/homer/:/www/assets:ro
 
-  postgres:
-    image: postgres:alpine
-    hostname: postgres
-    container_name: postgres
-    restart: unless-stopped
-    volumes:
-      - ${DATA}/postgres:/var/lib/postgresql/data
-      - ${CONFIG}/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "joplin"] # Last db in the list
-      interval: 10s
-      start_period: 30s
-    environment:
-      - POSTGRES_MULTIPLE_DATABASES=nextcloud,planka,koel,miniflux,joplin
-      - POSTGRES_USER=${USER}
-      - POSTGRES_PASSWORD=${PASSWORD}
-      - POSTGRES_HOST_AUTH_METHOD=trust
+#  postgres:
+#    image: postgres:alpine
+#    hostname: postgres
+#    container_name: postgres
+#    restart: unless-stopped
+#    volumes:
+#      - ${DATA}/postgres:/var/lib/postgresql/data
+#      - ${CONFIG}/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+#    healthcheck:
+#      test: ["CMD", "pg_isready", "-U", "nextcloud"] # Last db in the list
+#      interval: 10s
+#      start_period: 30s
+#    environment:
+#      - POSTGRES_MULTIPLE_DATABASES=nextcloud
+#      - POSTGRES_USER=${USER}
+#      - POSTGRES_PASSWORD=${PASSWORD}
+#      - POSTGRES_HOST_AUTH_METHOD=trust
 
-  redis:
+  nextcloud-redis:
     restart: unless-stopped
     image: redis:alpine
-    container_name: redis
-    hostname: redis
+    container_name: nextcloud-redis
+    hostname: nextcloud-redis
 
   nextcloud:
     restart: unless-stopped
@@ -77,32 +77,48 @@ services:
     container_name: nextcloud
     hostname: nextcloud
     depends_on:
-      - redis
-      - postgres
+      - nextcloud-redis
+      - nextcloud-db
     environment:
       - NEXTCLOUD_ADMIN_USER=arvigeus
       - NEXTCLOUD_ADMIN_PASSWORD=StrongAndComplicatedPassword
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=nextcloud-db
       - POSTGRES_DB=nextcloud
       - POSTGRES_USER=nextcloud
       - POSTGRES_PASSWORD=nextcloud
       - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN} caddy
-      - REDIS_HOST=redis
+      - REDIS_HOST=nextcloud-redis
     volumes:
       - ${CONFIG}/nextcloud/zzz-custom.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
-      - ${DATA}/nextcloud:/var/www/html
+      - ${DATA}/nextcloud/app:/var/www/html
   # DAV: https://cloud.arvigeus.one/remote.php/webdav
+
+  nextcloud-db:
+    image: postgres:14.1-alpine
+    hostname: nextcloud-db
+    container_name: nextcloud-db
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/nextcloud/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "nextcloud"]
+      interval: 10s
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=nextcloud
+      - POSTGRES_PASSWORD=nextcloud
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
   nextcloud-cron:
     restart: unless-stopped
     image: nextcloud:fpm-alpine
     container_name: nextcloud-cron
     depends_on:
-      - redis
-      - postgres
+      - nextcloud-redis
+      - nextcloud-db
     entrypoint: /cron.sh
     volumes:
-      - ${DATA}/nextcloud:/var/www/html
+      - ${DATA}/nextcloud/app:/var/www/html
 
   collabora:
     image: collabora/code
@@ -127,7 +143,7 @@ services:
   joplin:
     image: joplin/server:latest
     depends_on:
-      - postgres
+      - joplin-db
     container_name: joplin
     restart: unless-stopped
     hostname: joplin
@@ -139,18 +155,31 @@ services:
       - POSTGRES_DATABASE=joplin
       - POSTGRES_USER=joplin
       - POSTGRES_PORT=5432
-      - POSTGRES_HOST=postgres
+      - POSTGRES_HOST=joplin-db
 
-  kavita:
-    image: kizaing/kavita:latest
-    container_name: kavita
+  joplin-db:
+    image: postgres:14.1-alpine
+    hostname: joplin-db
+    container_name: joplin-db
     restart: unless-stopped
-    hostname: kavita
     volumes:
-      - ${DATA}/kavita:/kavita/config
-      - ${MEDIA}:/media
-    depends_on:
-      - nextcloud
+      - ${DATA}/joplin/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "joplin"]
+      interval: 10s
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=joplin
+      - POSTGRES_PASSWORD=joplin
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  memos:
+    image: neosmemo/memos:latest
+    hostname: memos
+    container_name: memos
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/memos/:/var/opt/memos
 
   planka:
     image: ghcr.io/plankanban/planka:latest
@@ -172,10 +201,26 @@ services:
     environment:
       - BASE_URL=https://kanban.${DOMAIN}
       - TRUST_PROXY=0
-      - DATABASE_URL=postgresql://planka:planka@postgres/planka
+      - DATABASE_URL=postgresql://planka:planka@planka-db/planka
       - SECRET_KEY=${PLANKA_SECRET_KEY}
     depends_on:
-      - postgres
+      - planka-db
+
+  planka-db:
+    image: postgres:14.1-alpine
+    hostname: planka-db
+    container_name: planka-db
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/planka/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "planka"]
+      interval: 10s
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=planka
+      - POSTGRES_PASSWORD=planka
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
   vaultwarden:
     image: vaultwarden/server:latest
@@ -267,39 +312,31 @@ services:
     hostname: miniflux
     restart: unless-stopped
     depends_on:
-      - postgres
+      - miniflux-db
       - rss-bridge
     environment:
-      - DATABASE_URL=postgresql://miniflux:miniflux@postgres/miniflux?sslmode=disable
+      - DATABASE_URL=postgresql://miniflux:miniflux@miniflux-db/miniflux?sslmode=disable
       - BASE_URL=https://news.${DOMAIN}
       - RUN_MIGRATIONS=1
       - CREATE_ADMIN=1
       - ADMIN_USERNAME=arvigeus
       - ADMIN_PASSWORD=StrongAndComplicatedPassword
 
-  koel:
-    image: hyzual/koel
-    container_name: koel
-    hostname: koel
+  miniflux-db:
+    image: postgres:14.1-alpine
+    hostname: miniflux-db
+    container_name: miniflux-db
     restart: unless-stopped
-    depends_on:
-      - postgres
     volumes:
-      - ${MEDIA}/Music:/music
-      - ${DATA}/koel/covers:/var/www/html/public/img/covers
-      - ${DATA}/koel/search_index:/var/www/html/storage/search-indexes
-      - ${DATA}/koel/.env:/var/www/html/.env
+      - ${DATA}/miniflux/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "miniflux"]
+      interval: 10s
+      start_period: 30s
     environment:
-      - DB_CONNECTION=pgsql
-      - DB_HOST=postgres
-      - DB_USERNAME=koel
-      - DB_PASSWORD=koel
-      - DB_DATABASE=koel
-      - FORCE_HTTPS=true
-      - APP_KEY=${KOEL_APP_KEY}
-      - LASTFM_API_KEY=${KOEL_LASTFM_API_KEY}
-      - LASTFM_API_SECRET=${KOEL_LASTFM_API_SECRET}
-      - YOUTUBE_API_KEY=${KOEL_YOUTUBE_API_KEY}
+      - POSTGRES_USER=miniflux
+      - POSTGRES_PASSWORD=miniflux
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
   wireguard:
     environment:
@@ -364,17 +401,6 @@ services:
       - SYMFONY__ENV__DOMAIN_NAME=https://research.${DOMAIN}
       - SYMFONY__ENV__FOSUSER_REGISTRATION=false
       - SYMFONY__ENV__FOSUSER_CONFIRMATION=false
-
-  # dim:
-  #   image: "vgarleanu/dim:latest"
-  #   devices:
-  #     - /dev/dri/card0
-  #   container_name: dim
-  #   hostname: dim
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ${DATA}/dim:/opt/dim/config
-  #     - ${MEDIA}:/media
 
 networks:
   default:

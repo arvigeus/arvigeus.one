@@ -53,25 +53,25 @@ function cleanup {
 function start {
     echo Starting services $*
     if [ -z "$1" ]; then
-        sudo docker-compose --env-file $ENV up -d --build
+        docker-compose --env-file $ENV up -d --build
     else
         for ARG in $*
         do
-            sudo docker-compose --env-file up -d --build $ENV $ARG
+            docker-compose --env-file up -d --build $ENV $ARG
         done
     fi
-    sudo docker-compose exec nextcloud chown -R 82:root /var/www/html
+    docker-compose exec nextcloud chown -R 82:root /var/www/html
     docker container logs caddy
 }
 
 function stop {
     echo Stopping services $*
     if [ -z "$1" ]; then
-        sudo docker-compose --env-file $ENV down --remove-orphan
+        docker-compose --env-file $ENV down --remove-orphan
     else
         for ARG in $*
         do
-            sudo docker-compose --env-file $ENV rm -s -v $ARG
+            docker-compose --env-file $ENV rm -s -v $ARG
         done
     fi
 }
@@ -96,9 +96,12 @@ function post-setup {
     docker exec -u www-data app-server php occ --no-warnings app:install contacts
     docker exec -u www-data app-server php occ --no-warnings app:install notes
 
+    docker cp filestash:/app/data/state $DATA/filestash
+    sudo chmod -R 777 $DATA/filestash
+
     stop $*
 
-    echo "Now uncomment volumes for `kavita`, `dim`, `koel`, then run `./run.sh start`"
+    echo "Now uncomment volumes for `filestash`, `kavita`, `dim`, `koel`, then run `./run.sh start`"
 }
 
 function default {
@@ -114,3 +117,4 @@ function help {
 
 TIMEFORMAT="Task completed in %3lR"
 time ${@:-default}
+

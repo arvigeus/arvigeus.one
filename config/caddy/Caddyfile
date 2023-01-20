@@ -148,12 +148,19 @@ joplin.{$DOMAIN} {
 	}
 }
 
-music.{$DOMAIN} {
-	reverse_proxy koel:80
-	tls {
-		dns hetzner {$HETZNER_API_TOKEN}
-	}
+memos.{$DOMAIN} {
+        reverse_proxy memos:5230
+        tls {
+                dns hetzner {$HETZNER_API_TOKEN}
+        }
 }
+
+#music.{$DOMAIN} {
+#	reverse_proxy koel:80
+#	tls {
+#		dns hetzner {$HETZNER_API_TOKEN}
+#	}
+#}
 
 kanban.{$DOMAIN} {
 	reverse_proxy planka:1337
@@ -195,12 +202,12 @@ recipes.{$DOMAIN} {
 	}
 }
 
-books.{$DOMAIN} {
-	reverse_proxy kavita:5000
-	tls {
-		dns hetzner {$HETZNER_API_TOKEN}
-	}
-}
+#books.{$DOMAIN} {
+#	reverse_proxy kavita:5000
+#	tls {
+#		dns hetzner {$HETZNER_API_TOKEN}
+#	}
+#}
 
 vpn.{$DOMAIN} {
 	reverse_proxy wireguard:51821
