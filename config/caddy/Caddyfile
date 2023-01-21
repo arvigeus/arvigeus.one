@@ -149,17 +149,22 @@ joplin.{$DOMAIN} {
 }
 
 memos.{$DOMAIN} {
-        reverse_proxy memos:5230
-        tls {
-                dns hetzner {$HETZNER_API_TOKEN}
-        }
+	reverse_proxy memos:5230
+	tls {
+			dns hetzner {$HETZNER_API_TOKEN}
+	}
 }
 
 notifications.{$DOMAIN} {
-        reverse_proxy ntfy:80
-        tls {
-                dns hetzner {$HETZNER_API_TOKEN}
-        }
+	reverse_proxy ntfy:80
+	tls {
+			dns hetzner {$HETZNER_API_TOKEN}
+	}
+
+	basicauth {
+		# username passwd_hash
+		{$BASICAUTH_USER} {$BASICAUTH_PASS}
+	}
 }
 
 #music.{$DOMAIN} {
