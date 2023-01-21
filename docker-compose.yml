@@ -203,25 +203,69 @@ services:
     volumes:
       - ${DATA}/apprise/config:/config
 
-  # noted:
-  #   image: mrcas/noted:latest
-  #   hostname: noted
-  #   container_name: noted
-  #   restart: unless-stopped
-  #   environment:
-  #     - TZ=${TZ}
-  #   volumes:
-  #     - ${DATA}/noted/app:/app
+  noted:
+    image: mrcas/noted:latest
+    hostname: noted
+    container_name: noted
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${DATA}/noted/app:/app:rw
 
   appwrite:
-    image: appwrite/appwrite:latest
+    image: appwrite/appwrite-lite:latest
     hostname: appwrite
     container_name: appwrite
     restart: unless-stopped
-    entrypoint: install
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ${DATA}/appwrite:/usr/src/code/appwrite
+      - ${DATA}/appwrite/storage:/storage:rw
+      - ${DATA}/appwrite/data:/data:rw
+    depends_on:
+      - appwrite-db
+    environment:
+      - _APP_ENV=production
+      - _APP_SYSTEM_EMAIL_NAME=${USER}
+      - _APP_SYSTEM_EMAIL_ADDRESS=${EMAIL}
+      - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS=${EMAIL
+      - _APP_OPTIONS_ABUSE=disabled
+      - _APP_OPTIONS_FORCE_HTTPS=enabled
+      - _APP_OPENSSL_KEY_V1=${BASICAUTH_PASS}
+      - _APP_DOMAIN=${DOMAIN}
+      - _APP_DOMAIN_TARGET=${DOMAIN}
+      - _APP_DB_HOST=appwrite-db
+      - _APP_DB_PORT=3306
+      - _APP_DB_SCHEMA=appwrite
+      - _APP_DB_USER=appwrite
+      - _APP_DB_PASS=appwrite
+      - _APP_SMTP_HOST=
+      - _APP_SMTP_PORT=
+      - _APP_SMTP_SECURE=
+      - _APP_SMTP_USERNAME=
+      - _APP_SMTP_PASSWORD=
+      - _APP_STORAGE_LIMIT=10000000
+      - _APP_FUNCTIONS_TIMEOUT=900
+      - _APP_FUNCTIONS_CONTAINERS=10
+      - _APP_FUNCTIONS_CPUS=1
+      - _APP_FUNCTIONS_MEMORY=128
+      - _APP_FUNCTIONS_MEMORY_SWAP=128
+      - _APP_MAINTENANCE_INTERVAL=86400
+      - _APP_SYSTEM_RESPONSE_FORMAT=
+
+  appwrite-db:
+    image: appwrite/mariadb:1.2.0
+    hostname: appwrite-db
+    container_name: appwrite-db
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/appwrite/db:/var/lib/mysql:rw
+    environment:
+      - MYSQL_ROOT_PASSWORD=appwrite
+      - MYSQL_DATABASE=appwrite
+      - MYSQL_USER=${_APP_DB_USER}
+      - MYSQL_PASSWORD=appwrite
+    command: "mysqld --innodb-flush-method=fsync"
 
   planka:
     image: ghcr.io/plankanban/planka:latest

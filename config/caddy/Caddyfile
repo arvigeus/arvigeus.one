@@ -182,7 +182,7 @@ apprise.{$DOMAIN} {
 # }
 
 data.{$DOMAIN} {
-	reverse_proxy appwrite:80
+	reverse_proxy appwrite:443
 	tls {
 			dns hetzner {$HETZNER_API_TOKEN}
 	}
