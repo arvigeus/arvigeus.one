@@ -174,15 +174,8 @@ apprise.{$DOMAIN} {
 	}
 }
 
-# todo.{$DOMAIN} {
-# 	reverse_proxy noted:8080
-# 	tls {
-# 			dns hetzner {$HETZNER_API_TOKEN}
-# 	}
-# }
-
-data.{$DOMAIN} {
-	reverse_proxy appwrite:443
+todo.{$DOMAIN} {
+	reverse_proxy noted:8080
 	tls {
 			dns hetzner {$HETZNER_API_TOKEN}
 	}
