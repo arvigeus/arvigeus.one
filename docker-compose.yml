@@ -47,23 +47,23 @@ services:
     volumes:
       - ${CONFIG}/homer/:/www/assets:ro
 
-#  postgres:
-#    image: postgres:alpine
-#    hostname: postgres
-#    container_name: postgres
-#    restart: unless-stopped
-#    volumes:
-#      - ${DATA}/postgres:/var/lib/postgresql/data
-#      - ${CONFIG}/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-#    healthcheck:
-#      test: ["CMD", "pg_isready", "-U", "nextcloud"] # Last db in the list
-#      interval: 10s
-#      start_period: 30s
-#    environment:
-#      - POSTGRES_MULTIPLE_DATABASES=nextcloud
-#      - POSTGRES_USER=${USER}
-#      - POSTGRES_PASSWORD=${PASSWORD}
-#      - POSTGRES_HOST_AUTH_METHOD=trust
+  #  postgres:
+  #    image: postgres:alpine
+  #    hostname: postgres
+  #    container_name: postgres
+  #    restart: unless-stopped
+  #    volumes:
+  #      - ${DATA}/postgres:/var/lib/postgresql/data
+  #      - ${CONFIG}/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+  #    healthcheck:
+  #      test: ["CMD", "pg_isready", "-U", "nextcloud"] # Last db in the list
+  #      interval: 10s
+  #      start_period: 30s
+  #    environment:
+  #      - POSTGRES_MULTIPLE_DATABASES=nextcloud
+  #      - POSTGRES_USER=${USER}
+  #      - POSTGRES_PASSWORD=${PASSWORD}
+  #      - POSTGRES_HOST_AUTH_METHOD=trust
 
   nextcloud-redis:
     restart: unless-stopped
@@ -180,6 +180,20 @@ services:
     restart: unless-stopped
     volumes:
       - ${DATA}/memos/:/var/opt/memos
+
+  ntfy:
+    image: binwiederhier/ntfy
+    hostname: ntfy
+    container_name: ntfy
+    restart: unless-stopped
+    command:
+      - serve
+    environment:
+      - TZ=${TZ}
+    user: ${PUID}:${PGID}
+    volumes:
+      - ${DATA}/ntfy/var/cache/ntfy:/var/cache/ntfy
+      - ${DATA}/ntfy/etc/ntfy:/etc/ntfy
 
   planka:
     image: ghcr.io/plankanban/planka:latest
