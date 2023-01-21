@@ -167,6 +167,13 @@ notifications.{$DOMAIN} {
 	}
 }
 
+apprise.{$DOMAIN} {
+	reverse_proxy apprise:8000
+	tls {
+			dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
 #music.{$DOMAIN} {
 #	reverse_proxy koel:80
 #	tls {

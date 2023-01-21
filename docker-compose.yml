@@ -195,6 +195,14 @@ services:
       - ${DATA}/ntfy/var/cache/ntfy:/var/cache/ntfy
       - ${DATA}/ntfy/etc/ntfy:/etc/ntfy
 
+  apprise:
+    image: caronc/apprise:latest
+    hostname: apprise
+    container_name: apprise
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/apprise/config:/config
+
   planka:
     image: ghcr.io/plankanban/planka:latest
     container_name: planka
