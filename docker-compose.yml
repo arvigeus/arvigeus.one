@@ -263,7 +263,7 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=appwrite
       - MYSQL_DATABASE=appwrite
-      - MYSQL_USER=${_APP_DB_USER}
+      - MYSQL_USER=appwrite
       - MYSQL_PASSWORD=appwrite
     command: "mysqld --innodb-flush-method=fsync"
 
