@@ -203,15 +203,25 @@ services:
     volumes:
       - ${DATA}/apprise/config:/config
 
-  noted:
-    image: mrcas/noted:latest
-    hostname: noted
-    container_name: noted
+  # noted:
+  #   image: mrcas/noted:latest
+  #   hostname: noted
+  #   container_name: noted
+  #   restart: unless-stopped
+  #   environment:
+  #     - TZ=${TZ}
+  #   volumes:
+  #     - ${DATA}/noted/app:/app
+
+  appwrite:
+    image: appwrite/appwrite:latest
+    hostname: appwrite
+    container_name: appwrite
     restart: unless-stopped
-    environment:
-      - TZ=${TZ}
+    entrypoint: install
     volumes:
-      - ${DATA}/noted:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA}/appwrite:/usr/src/code/appwrite
 
   planka:
     image: ghcr.io/plankanban/planka:latest
