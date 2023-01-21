@@ -203,6 +203,16 @@ services:
     volumes:
       - ${DATA}/apprise/config:/config
 
+  noted:
+    image: mrcas/noted:latest
+    hostname: noted
+    container_name: noted
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${DATA}/noted:/app
+
   planka:
     image: ghcr.io/plankanban/planka:latest
     container_name: planka
