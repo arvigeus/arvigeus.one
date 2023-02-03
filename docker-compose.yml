@@ -211,7 +211,7 @@ services:
     environment:
       - TZ=${TZ}
     volumes:
-      - ${DATA}/noted/app:/app:rw
+      - ${DATA}/noted/db:/app/db
 
   planka:
     image: ghcr.io/plankanban/planka:latest
