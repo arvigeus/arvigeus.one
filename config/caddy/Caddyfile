@@ -17,6 +17,13 @@ system.{$DOMAIN} {
 	}
 }
 
+updates.{$DOMAIN} {
+	reverse_proxy dockcheck-web:80
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
 logs.{$DOMAIN} {
 	reverse_proxy dozzle:8080
 	tls {
