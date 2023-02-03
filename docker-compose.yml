@@ -200,6 +200,11 @@ services:
     hostname: apprise
     container_name: apprise
     restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - TZ=${TZ}
+      - PGID=${PGID}
+      - PASSWORD=${PASSWORD}
     volumes:
       - ${DATA}/apprise/config:/config
 
