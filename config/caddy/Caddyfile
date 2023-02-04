@@ -22,6 +22,11 @@ updates.{$DOMAIN} {
 	tls {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}
+
+	basicauth {
+		# username passwd_hash
+		{$BASICAUTH_USER} {$BASICAUTH_PASS}
+	}
 }
 
 logs.{$DOMAIN} {
