@@ -129,7 +129,7 @@ services:
       - ${DATA}/apprise/config:/config
 
   mind:
-    image: mrcas/mind:lates
+    image: mrcas/mind:latest
     hostname: noted
     container_name: noted
     restart: unless-stopped
