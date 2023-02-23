@@ -130,8 +130,8 @@ services:
 
   mind:
     image: mrcas/mind:latest
-    hostname: noted
-    container_name: noted
+    hostname: mind
+    container_name: mind
     restart: unless-stopped
     environment:
       - TZ=${TZ}
