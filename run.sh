@@ -60,7 +60,6 @@ function start {
             docker-compose --env-file up -d --build $ENV $ARG
         done
     fi
-    docker-compose exec nextcloud chown -R 82:root /var/www/html
     docker container logs caddy
 }
 

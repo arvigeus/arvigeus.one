@@ -74,57 +74,6 @@ vault.{$DOMAIN} {
 #     webdav /*
 # }
 
-cloud.{$DOMAIN} {
-	encode zstd gzip
-
-	@collabora {
-		path /browser/* # Browser is the client part of LibreOffice Online
-		path /hosting/discovery # WOPI discovery URL
-		path /hosting/capabilities # Show capabilities as json
-		path /cool/* # Main websocket, uploads/downloads, presentations
-	}
-
-	reverse_proxy @collabora collabora:9980 {
-		header_up Host "cloud.{$DOMAIN}"
-		transport http {
-			tls_insecure_skip_verify
-		}
-	}
-
-	root * /var/www/html
-	file_server
-
-	php_fastcgi nextcloud:9000 {
-		env front_controller_active true # Remove index.php form url
-	}
-	
-	header {
-		# enable HSTS
-		Strict-Transport-Security "max-age=31536000;"
-	}
-	redir /.well-known/webfinger /public.php?service=webfinger 301
-	redir /.well-known/carddav /remote.php/dav 301
-	redir /.well-known/caldav /remote.php/dav 301
-	@forbidden {
-		path /.htaccess
-		path /data/*
-		path /config/*
-		path /db_structure
-		path /.xml
-		path /README
-		path /3rdparty/*
-		path /lib/*
-		path /templates/*
-		path /occ
-		path /console.php
-	}
-	respond @forbidden 403
-
-	tls {
-		dns hetzner {$HETZNER_API_TOKEN}
-	}
-}
-
 files.{$DOMAIN} {
 	redir https://cloud.{$DOMAIN}/apps/files/{url}
 	tls {
@@ -147,7 +96,7 @@ calendar.{$DOMAIN} {
 }
 
 notes.{$DOMAIN} {
-	redir https://cloud.{$DOMAIN}/apps/notes/{url}
+	reverse_proxy mind:8080
 	tls {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}
@@ -155,6 +104,13 @@ notes.{$DOMAIN} {
 
 joplin.{$DOMAIN} {
 	reverse_proxy joplin:22300
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
+wiki.{$DOMAIN} {
+	reverse_proxy affine:3000
 	tls {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}
@@ -193,12 +149,12 @@ todo.{$DOMAIN} {
 	}
 }
 
-#music.{$DOMAIN} {
-#	reverse_proxy koel:80
-#	tls {
-#		dns hetzner {$HETZNER_API_TOKEN}
-#	}
-#}
+music.{$DOMAIN} {
+	redir https://cloud.{$DOMAIN}/apps/music/{url}
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
 
 kanban.{$DOMAIN} {
 	reverse_proxy planka:1337
@@ -240,13 +196,6 @@ recipes.{$DOMAIN} {
 	}
 }
 
-#books.{$DOMAIN} {
-#	reverse_proxy kavita:5000
-#	tls {
-#		dns hetzner {$HETZNER_API_TOKEN}
-#	}
-#}
-
 vpn.{$DOMAIN} {
 	reverse_proxy wireguard:51821
 	tls {
@@ -279,7 +228,3 @@ research.{$DOMAIN} {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}
 }
-
-# media.{$DOMAIN} {
-#         reverse_proxy dim:8000
-# }

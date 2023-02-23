@@ -20,10 +20,6 @@ services:
       - ${CONFIG}/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ${DATA}/caddy/data:/data
       - ${DATA}/caddy/config:/config
-      - ${CONFIG}/nextcloud/zzz-custom.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
-      - ${DATA}/nextcloud/app:/var/www/html
-    links:
-      - nextcloud
 
   dockcheck-web:
     image: "palleri/dockcheck-web:latest"
@@ -55,99 +51,6 @@ services:
       - TZ=${TZ}
     volumes:
       - ${CONFIG}/homer/:/www/assets:ro
-
-  #  postgres:
-  #    image: postgres:alpine
-  #    hostname: postgres
-  #    container_name: postgres
-  #    restart: unless-stopped
-  #    volumes:
-  #      - ${DATA}/postgres:/var/lib/postgresql/data
-  #      - ${CONFIG}/postgres/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
-  #    healthcheck:
-  #      test: ["CMD", "pg_isready", "-U", "nextcloud"] # Last db in the list
-  #      interval: 10s
-  #      start_period: 30s
-  #    environment:
-  #      - POSTGRES_MULTIPLE_DATABASES=nextcloud
-  #      - POSTGRES_USER=${USER}
-  #      - POSTGRES_PASSWORD=${PASSWORD}
-  #      - POSTGRES_HOST_AUTH_METHOD=trust
-
-  nextcloud-redis:
-    restart: unless-stopped
-    image: redis:alpine
-    container_name: nextcloud-redis
-    hostname: nextcloud-redis
-
-  nextcloud:
-    restart: unless-stopped
-    image: nextcloud:fpm-alpine
-    container_name: nextcloud
-    hostname: nextcloud
-    depends_on:
-      - nextcloud-redis
-      - nextcloud-db
-    environment:
-      - NEXTCLOUD_ADMIN_USER=arvigeus
-      - NEXTCLOUD_ADMIN_PASSWORD=StrongAndComplicatedPassword
-      - POSTGRES_HOST=nextcloud-db
-      - POSTGRES_DB=nextcloud
-      - POSTGRES_USER=nextcloud
-      - POSTGRES_PASSWORD=nextcloud
-      - NEXTCLOUD_TRUSTED_DOMAINS=cloud.${DOMAIN} caddy
-      - REDIS_HOST=nextcloud-redis
-    volumes:
-      - ${CONFIG}/nextcloud/zzz-custom.ini:/usr/local/etc/php/conf.d/zzz-custom.ini:ro
-      - ${DATA}/nextcloud/app:/var/www/html
-  # DAV: https://cloud.arvigeus.one/remote.php/webdav
-
-  nextcloud-db:
-    image: postgres:14.1-alpine
-    hostname: nextcloud-db
-    container_name: nextcloud-db
-    restart: unless-stopped
-    volumes:
-      - ${DATA}/nextcloud/db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "nextcloud"]
-      interval: 10s
-      start_period: 30s
-    environment:
-      - POSTGRES_USER=nextcloud
-      - POSTGRES_PASSWORD=nextcloud
-      - POSTGRES_HOST_AUTH_METHOD=trust
-
-  nextcloud-cron:
-    restart: unless-stopped
-    image: nextcloud:fpm-alpine
-    container_name: nextcloud-cron
-    depends_on:
-      - nextcloud-redis
-      - nextcloud-db
-    entrypoint: /cron.sh
-    volumes:
-      - ${DATA}/nextcloud/app:/var/www/html
-
-  collabora:
-    image: collabora/code
-    container_name: collabora
-    restart: unless-stopped
-    ports:
-      - "9980:9980"
-    volumes:
-      - /etc/localtime:/etc/localtime
-      - /etc/timezone:/etc/timezone
-    environment:
-      # Credentials for /browser/dist/admin/admin.html
-      - username=${USER}
-      - password=${PASSWORD}
-      - server_name=${NEXTCLOUD_FQDN}
-      - dictionaries=en_US
-      - extra_params=--o:ssl.enable=true --o:ssl.termination=false # Set SSL options
-    cap_add:
-      - MKNOD
-    tty: true
 
   joplin:
     image: joplin/server:latest
@@ -181,6 +84,14 @@ services:
       - POSTGRES_USER=joplin
       - POSTGRES_PASSWORD=joplin
       - POSTGRES_HOST_AUTH_METHOD=trust
+
+  affine:
+    image: ghcr.io/toeverything/affine-self-hosted:latest
+    container_name: affine
+    restart: unless-stopped
+    hostname: affine
+    volumes:
+      - ${DATA}/affine/data:/app/data
 
   memos:
     image: neosmemo/memos:latest
@@ -217,15 +128,15 @@ services:
     volumes:
       - ${DATA}/apprise/config:/config
 
-  noted:
-    image: mrcas/noted:latest
+  mind:
+    image: mrcas/mind:lates
     hostname: noted
     container_name: noted
     restart: unless-stopped
     environment:
       - TZ=${TZ}
     volumes:
-      - ${DATA}/noted/db:/app/db
+      - ${DATA}/mind/db:/app/db
 
   planka:
     image: ghcr.io/plankanban/planka:latest

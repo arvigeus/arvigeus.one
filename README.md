@@ -121,12 +121,6 @@ Replace `$database` with database name
 
 ## Tips and tricks
 
-### Prettify Nextcloud links
-
-Add `'htaccess.RewriteBase' => '/',` to `${DATA}/nextcloud/config/config.php`
-
-Reload htaccess rules: `docker exec -u www-data nextcloud php occ maintenance:update:htaccess`
-
 ## Troubleshooting
 
 - `sudo: unable to resolve host localhost.localdomain: Name or service not known`: Add the following line to `/etc/hosts/`: `127.0.0.1 localhost.localdomain localhost`
@@ -136,4 +130,3 @@ Reload htaccess rules: `docker exec -u www-data nextcloud php occ maintenance:up
 - Check why site is not secure: <https://www.whynopadlock.com>
 - Check if docker is working: `curl -H "Content-Type: application/json" --unix-socket /var/run/docker.sock http://localhost/_ping`
 - Uncomment `DOZZLE_LEVEL: debug` in `docker-compose.yml`, then restart to see more detailed log
-- Remove Nextcloud maintenance mode: `docker exec -u www-data nextcloud php occ maintenance:mode --off`
