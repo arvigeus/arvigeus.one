@@ -130,3 +130,4 @@ Replace `$database` with database name
 - Check why site is not secure: <https://www.whynopadlock.com>
 - Check if docker is working: `curl -H "Content-Type: application/json" --unix-socket /var/run/docker.sock http://localhost/_ping`
 - Uncomment `DOZZLE_LEVEL: debug` in `docker-compose.yml`, then restart to see more detailed log
+- Mounting WebDAV: <https://sleeplessbeastie.eu/2017/09/04/how-to-mount-webdav-share/>

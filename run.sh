@@ -39,8 +39,8 @@ function setup {
     sudo ufw allow pop3 comment "pop3"
     sudo ufw enable
 
-    # Postgres
-    sudo chmod +x $CONFIG/postgres/docker-entrypoint-initdb.d/create-multiple-postgresql-databases.sh
+    # WebDav
+    sudo apt-get install davfs2
 
     # Tools
     sudo apt install jq

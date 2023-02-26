@@ -95,6 +95,13 @@ calendar.{$DOMAIN} {
 	}
 }
 
+media.{$DOMAIN} {
+	reverse_proxy jellyfin:8096
+	tls {
+		dns hetzner {$HETZNER_API_TOKEN}
+	}
+}
+
 notes.{$DOMAIN} {
 	reverse_proxy mind:8080
 	tls {
