@@ -217,7 +217,7 @@ services:
       - ${DATA}/nextcloud/Videos:/data/movies:ro
       - ${DATA}/nextcloud/Music:/data/music:ro
       - ${DATA}/nextcloud/Books:/data/books:ro
-    devices:
+    # devices:
     ## Refer this: https://jellyfin.org/docs/general/administration/hardware-acceleration.html
     #- /path/to/render/devices:/path/to/render/devices
 
