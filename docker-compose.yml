@@ -313,6 +313,25 @@ services:
       - POSTGRES_PASSWORD=miniflux
       - POSTGRES_HOST_AUTH_METHOD=trust
 
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    hostname: pocketbase
+    container_name: pocketbase
+    restart: unless-stopped
+    # command:
+    #   - --encryptionEnv #optional
+    #   - ENCRYPTION #optional
+    volumes:
+      - ${DATA}/pocketbase/data:/pb_data
+      - ${DATA}/pocketbase/public:/pb_public #optional
+    # environment:
+    #   ENCRYPTION: example #optional
+    healthcheck: #optional (recommended) since v0.10.0
+      test: wget --no-verbose --tries=1 --spider https://data.${DOMAIN}/api/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   wireguard:
     environment:
       # ⚠️ Required:

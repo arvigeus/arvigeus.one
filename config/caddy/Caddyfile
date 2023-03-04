@@ -130,6 +130,10 @@ memos.{$DOMAIN} {
 	}
 }
 
+data.{$DOMAIN} {
+    reverse_proxy pocketbase:8090
+}
+
 notifications.{$DOMAIN} {
 	reverse_proxy ntfy:80
 	tls {
