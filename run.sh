@@ -12,7 +12,7 @@ function setup {
     curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
     sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
     sudo apt update
-    sudo apt -y install docker-ce docker-ce-cli
+    sudo apt -y install docker-ce docker-ce-cli docker-compose-plugin
     curl -s https://api.github.com/repos/docker/compose/releases/latest | grep browser_download_url | grep docker-compose-Linux-x86_64 | cut -d '"' -f 4 | wget -qi -
     chmod +x docker-compose-Linux-x86_64
     sudo mv docker-compose-Linux-x86_64 /usr/bin/docker-compose
@@ -27,7 +27,7 @@ function setup {
     sudo apt update
     sudo apt install -y cockpit cockpit-navigator
     sudo cp $CONFIG/cockpit/cockpit.conf /etc/cockpit/cockpit.conf
-    
+
     # UFW
     sudo apt install -y ufw
     sudo ufw allow 443/tcp comment "caddy"
@@ -53,11 +53,11 @@ function cleanup {
 function start {
     echo Starting services $*
     if [ -z "$1" ]; then
-        docker-compose --env-file $ENV up -d --build
+        docker compose --env-file $ENV up -d --build
     else
         for ARG in $*
         do
-            docker-compose --env-file up -d --build $ENV $ARG
+            docker compose --env-file up -d --build $ENV $ARG
         done
     fi
     docker container logs caddy
@@ -66,11 +66,11 @@ function start {
 function stop {
     echo Stopping services $*
     if [ -z "$1" ]; then
-        docker-compose --env-file $ENV down --remove-orphan
+        docker compose --env-file $ENV down
     else
         for ARG in $*
         do
-            docker-compose --env-file $ENV rm -s -v $ARG
+            docker compose --env-file $ENV rm -s -v $ARG
         done
     fi
 }
@@ -81,8 +81,8 @@ function restart {
 }
 
 function update {
-    docker-compose pull
-    docker-compose up --detach
+    docker compose pull
+    docker compose up --detach
     docker image prune -f
 }
 

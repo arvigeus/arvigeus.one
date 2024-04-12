@@ -85,13 +85,13 @@ services:
       - POSTGRES_PASSWORD=joplin
       - POSTGRES_HOST_AUTH_METHOD=trust
 
-  affine:
-    image: ghcr.io/toeverything/affine-self-hosted:latest
-    container_name: affine
-    restart: unless-stopped
-    hostname: affine
-    volumes:
-      - ${DATA}/affine/data:/app/data
+  #affine:
+  #  image: ghcr.io/toeverything/affine-self-hosted:latest
+  #  container_name: affine
+  #  restart: unless-stopped
+  #  hostname: affine
+  #  volumes:
+  #    - ${DATA}/affine/data:/app/data
 
   memos:
     image: neosmemo/memos:latest
