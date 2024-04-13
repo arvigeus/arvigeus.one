@@ -249,14 +249,19 @@ services:
   #     - GID=0
 
   mealie:
-    image: hkotel/mealie:latest
+    image: ghcr.io/mealie-recipes/mealie:latest
     container_name: mealie
     hostname: mealie
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1000M
     environment:
       PUID: ${PGID}
       PGID: ${PUID}
       TZ: ${TZ}
+      ALLOW_SIGNUP: "false"
       # Default Recipe Settings
       RECIPE_PUBLIC: "true"
       RECIPE_SHOW_NUTRITION: "true"
@@ -266,10 +271,9 @@ services:
       RECIPE_DISABLE_AMOUNT: "false"
       DEFAULT_EMAIL: ${EMAIL}
       DEFAULT_PASSWORD: ${PASSWORD}
-      # Gunicorn
-      WEB_CONCURRENCY: 2
-      # WORKERS_PER_CORE: 0.5
-      # MAX_WORKERS: 8
+      MAX_WORKERS: 1
+      WEB_CONCURRENCY: 1
+      BASE_URL: https://recipes.${DOMAIN}
     volumes:
       - ${DATA}/mealie:/app/data
 

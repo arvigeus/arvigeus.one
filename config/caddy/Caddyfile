@@ -201,7 +201,7 @@ news.{$DOMAIN} {
 }
 
 recipes.{$DOMAIN} {
-	reverse_proxy mealie:80
+	reverse_proxy mealie:9000
 	tls {
 		dns hetzner {$HETZNER_API_TOKEN}
 	}
