@@ -328,6 +328,7 @@ services:
     volumes:
       - ${DATA}/pocketbase/data:/pb_data
       - ${DATA}/pocketbase/public:/pb_public #optional
+      - ${DATA}/pocketbase/hooks:/pb_hooks #optional
     # environment:
     #   ENCRYPTION: example #optional
     healthcheck: #optional (recommended) since v0.10.0
