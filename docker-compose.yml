@@ -318,6 +318,7 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=trust
 
   pocketbase:
+    # NOTE: Correct url is https://data.${DOMAIN}/_/
     image: ghcr.io/muchobien/pocketbase:latest
     hostname: pocketbase
     container_name: pocketbase

@@ -131,13 +131,7 @@ memos.{$DOMAIN} {
 }
 
 data.{$DOMAIN} {
-    reverse_proxy /api/* pocketbase:8090  # Forward API requests
-    reverse_proxy / pocketbase:8090       # Reverse proxy for the rest
-
-    @rootPath {
-        path /
-    }
-    redir @rootPath /_/  # Redirect root `/` to `/_/`
+    reverse_proxy pocketbase:8090
 }
 
 notifications.{$DOMAIN} {
