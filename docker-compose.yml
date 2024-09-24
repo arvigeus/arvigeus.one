@@ -190,7 +190,7 @@ services:
       - WEBSOCKET_ENABLED=true
       - DOMAIN=https://vault.$DOMAIN
       - LOG_FILE=/var/log/docker/bitwarden.log
-      - SMTP_SSL=$SMTP_SSL
+      - SMTP_SECURITY=$SMTP_SECURITY
       - SMTP_EXPLICIT_TLS=$SMTP_EXPLICIT_TLS
       - SMTP_HOST=$SMTP_HOST
       - SMTP_PORT=$SMTP_PORT
@@ -402,5 +402,5 @@ services:
 
 networks:
   default:
-    external:
-      name: $DOCKER_NETWORK
+    external: true
+    name: $DOCKER_NETWORK
