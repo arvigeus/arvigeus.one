@@ -116,13 +116,6 @@ joplin.{$DOMAIN} {
 	}
 }
 
-wiki.{$DOMAIN} {
-	reverse_proxy affine:3000
-	tls {
-		dns hetzner {$HETZNER_API_TOKEN}
-	}
-}
-
 memos.{$DOMAIN} {
 	reverse_proxy memos:5230
 	tls {
