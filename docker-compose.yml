@@ -52,38 +52,38 @@ services:
     volumes:
       - ${CONFIG}/homer/:/www/assets:ro
 
-  joplin:
-    image: joplin/server:latest
-    depends_on:
-      - joplin-db
-    container_name: joplin
-    restart: unless-stopped
-    hostname: joplin
-    environment:
-      - APP_PORT=22300
-      - APP_BASE_URL=https://joplin.${DOMAIN}
-      - DB_CLIENT=pg
-      - POSTGRES_PASSWORD=joplin
-      - POSTGRES_DATABASE=joplin
-      - POSTGRES_USER=joplin
-      - POSTGRES_PORT=5432
-      - POSTGRES_HOST=joplin-db
+  # joplin:
+  #   image: joplin/server:latest
+  #   depends_on:
+  #     - joplin-db
+  #   container_name: joplin
+  #   restart: unless-stopped
+  #   hostname: joplin
+  #   environment:
+  #     - APP_PORT=22300
+  #     - APP_BASE_URL=https://joplin.${DOMAIN}
+  #     - DB_CLIENT=pg
+  #     - POSTGRES_PASSWORD=joplin
+  #     - POSTGRES_DATABASE=joplin
+  #     - POSTGRES_USER=joplin
+  #     - POSTGRES_PORT=5432
+  #     - POSTGRES_HOST=joplin-db
 
-  joplin-db:
-    image: postgres:14.1-alpine
-    hostname: joplin-db
-    container_name: joplin-db
-    restart: unless-stopped
-    volumes:
-      - ${DATA}/joplin/db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "joplin"]
-      interval: 10s
-      start_period: 30s
-    environment:
-      - POSTGRES_USER=joplin
-      - POSTGRES_PASSWORD=joplin
-      - POSTGRES_HOST_AUTH_METHOD=trust
+  # joplin-db:
+  #   image: postgres:14.1-alpine
+  #   hostname: joplin-db
+  #   container_name: joplin-db
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ${DATA}/joplin/db:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "joplin"]
+  #     interval: 10s
+  #     start_period: 30s
+  #   environment:
+  #     - POSTGRES_USER=joplin
+  #     - POSTGRES_PASSWORD=joplin
+  #     - POSTGRES_HOST_AUTH_METHOD=trust
 
   memos:
     image: neosmemo/memos:latest
@@ -195,23 +195,23 @@ services:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
 
-  jellyfin:
-    image: lscr.io/linuxserver/jellyfin
-    container_name: jellyfin
-    hostname: jellyfin
-    restart: unless-stopped
-    environment:
-      PUID: ${PGID}
-      PGID: ${PUID}
-      TZ: ${TZ}
-    volumes:
-      - ${DATA}/jellyfin/config:/config
-      - ${DATA}/nextcloud/Videos:/data/movies:ro
-      - ${DATA}/nextcloud/Music:/data/music:ro
-      - ${DATA}/nextcloud/Books:/data/books:ro
-    # devices:
-    ## Refer this: https://jellyfin.org/docs/general/administration/hardware-acceleration.html
-    #- /path/to/render/devices:/path/to/render/devices
+  # jellyfin:
+  #   image: lscr.io/linuxserver/jellyfin
+  #   container_name: jellyfin
+  #   hostname: jellyfin
+  #   restart: unless-stopped
+  #   environment:
+  #     PUID: ${PGID}
+  #     PGID: ${PUID}
+  #     TZ: ${TZ}
+  #   volumes:
+  #     - ${DATA}/jellyfin/config:/config
+  #     - ${DATA}/nextcloud/Videos:/data/movies:ro
+  #     - ${DATA}/nextcloud/Music:/data/music:ro
+  #     - ${DATA}/nextcloud/Books:/data/books:ro
+  # devices:
+  ## Refer this: https://jellyfin.org/docs/general/administration/hardware-acceleration.html
+  #- /path/to/render/devices:/path/to/render/devices
 
   ## To restore database from backup:
   # docker exec -it bitwarden bash
@@ -240,34 +240,34 @@ services:
   #     - UID=0
   #     - GID=0
 
-  mealie:
-    image: ghcr.io/mealie-recipes/mealie:latest
-    container_name: mealie
-    hostname: mealie
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 1000M
-    environment:
-      PUID: ${PGID}
-      PGID: ${PUID}
-      TZ: ${TZ}
-      ALLOW_SIGNUP: "false"
-      # Default Recipe Settings
-      RECIPE_PUBLIC: "true"
-      RECIPE_SHOW_NUTRITION: "true"
-      RECIPE_SHOW_ASSETS: "true"
-      RECIPE_LANDSCAPE_VIEW: "true"
-      RECIPE_DISABLE_COMMENTS: "true"
-      RECIPE_DISABLE_AMOUNT: "false"
-      DEFAULT_EMAIL: ${EMAIL}
-      DEFAULT_PASSWORD: ${PASSWORD}
-      MAX_WORKERS: 1
-      WEB_CONCURRENCY: 1
-      BASE_URL: https://recipes.${DOMAIN}
-    volumes:
-      - ${DATA}/mealie:/app/data
+  # mealie:
+  #   image: ghcr.io/mealie-recipes/mealie:latest
+  #   container_name: mealie
+  #   hostname: mealie
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 1000M
+  #   environment:
+  #     PUID: ${PGID}
+  #     PGID: ${PUID}
+  #     TZ: ${TZ}
+  #     ALLOW_SIGNUP: "false"
+  #     # Default Recipe Settings
+  #     RECIPE_PUBLIC: "true"
+  #     RECIPE_SHOW_NUTRITION: "true"
+  #     RECIPE_SHOW_ASSETS: "true"
+  #     RECIPE_LANDSCAPE_VIEW: "true"
+  #     RECIPE_DISABLE_COMMENTS: "true"
+  #     RECIPE_DISABLE_AMOUNT: "false"
+  #     DEFAULT_EMAIL: ${EMAIL}
+  #     DEFAULT_PASSWORD: ${PASSWORD}
+  #     MAX_WORKERS: 1
+  #     WEB_CONCURRENCY: 1
+  #     BASE_URL: https://recipes.${DOMAIN}
+  #   volumes:
+  #     - ${DATA}/mealie:/app/data
 
   rss-bridge:
     image: rssbridge/rss-bridge:latest

@@ -95,12 +95,12 @@ calendar.{$DOMAIN} {
 	}
 }
 
-media.{$DOMAIN} {
-	reverse_proxy jellyfin:8096
-	tls {
-		dns hetzner {$HETZNER_API_TOKEN}
-	}
-}
+# media.{$DOMAIN} {
+# 	reverse_proxy jellyfin:8096
+# 	tls {
+# 		dns hetzner {$HETZNER_API_TOKEN}
+# 	}
+# }
 
 notes.{$DOMAIN} {
 	reverse_proxy mind:8080
@@ -109,12 +109,12 @@ notes.{$DOMAIN} {
 	}
 }
 
-joplin.{$DOMAIN} {
-	reverse_proxy joplin:22300
-	tls {
-		dns hetzner {$HETZNER_API_TOKEN}
-	}
-}
+# joplin.{$DOMAIN} {
+# 	reverse_proxy joplin:22300
+# 	tls {
+# 		dns hetzner {$HETZNER_API_TOKEN}
+# 	}
+# }
 
 memos.{$DOMAIN} {
 	reverse_proxy memos:5230
@@ -193,12 +193,12 @@ news.{$DOMAIN} {
 	}
 }
 
-recipes.{$DOMAIN} {
-	reverse_proxy mealie:9000
-	tls {
-		dns hetzner {$HETZNER_API_TOKEN}
-	}
-}
+# recipes.{$DOMAIN} {
+# 	reverse_proxy mealie:9000
+# 	tls {
+# 		dns hetzner {$HETZNER_API_TOKEN}
+# 	}
+# }
 
 vpn.{$DOMAIN} {
 	reverse_proxy wireguard:51821
