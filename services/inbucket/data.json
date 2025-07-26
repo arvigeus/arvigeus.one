@@ -3,7 +3,8 @@
     {
       "name": "Inbucket",
       "subtitle": "Disposable webmail server",
-      "category": "System"
+      "category": "System",
+      "order": 3
     }
   ]
 }

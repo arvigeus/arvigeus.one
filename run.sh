@@ -23,15 +23,6 @@ function get_services {
     fi
 }
 
-function get_docker_services {
-    # Get services that have docker-compose.yml files
-    for service_dir in $(get_services "$@"); do
-        if [ -f "$service_dir/docker-compose.yml" ]; then
-            echo "$service_dir"
-        fi
-    done
-}
-
 function start {
     if [ $# -eq 0 ]; then
         echo "Starting all services..."
@@ -49,7 +40,6 @@ function start {
         service_name=$(basename "$service_dir")
         if [ -f "$service_dir/start.sh" ]; then
             echo "Running start script for $service_name..."
-            chmod +x "$service_dir/start.sh"
             (cd "$service_dir" && ./start.sh)
         fi
     done <<< "$services"
@@ -120,7 +110,6 @@ function stop {
         service_name=$(basename "$service_dir")
         if [ -f "$service_dir/stop.sh" ]; then
             echo "Running stop script for $service_name..."
-            chmod +x "$service_dir/stop.sh"
             (cd "$service_dir" && ./stop.sh)
         fi
     done <<< "$services"
@@ -207,71 +196,6 @@ function status {
     fi
 }
 
-function check {
-    if [ $# -eq 0 ]; then
-        echo "Checking for updates..."
-    else
-        echo "Checking for updates: $*"
-    fi
-    
-    # Get services to check (only Docker services)
-    services=$(get_services "$@") || return 1
-    
-    updates_found=""
-    
-    while IFS= read -r service_dir; do
-        [ -z "$service_dir" ] && continue
-        if [ -f "$service_dir/docker-compose.yml" ]; then
-            service_name=$(basename "$service_dir")
-            
-            # Extract image names from docker-compose.yml
-            images=$(grep -E "^\s*image:" "$service_dir/docker-compose.yml" | sed 's/.*image:\s*//' | sed 's/[[:space:]]*$//')
-            
-            while IFS= read -r image; do
-                [ -z "$image" ] && continue
-                
-                # Skip if image has no tag or is latest
-                if [[ "$image" != *":"* ]] || [[ "$image" == *":latest" ]]; then
-                    continue
-                fi
-                
-                # Get current local image info
-                current_digest=$(docker image inspect "$image" 2>/dev/null | jq -r '.[0].RepoDigests[0] // empty' 2>/dev/null)
-                
-                if [ -z "$current_digest" ]; then
-                    continue
-                fi
-                
-                # Pull latest image info without downloading
-                latest_digest=$(docker manifest inspect "$image" 2>/dev/null | jq -r '.config.digest // empty' 2>/dev/null)
-                
-                if [ -z "$latest_digest" ]; then
-                    continue
-                fi
-                
-                # Compare digests
-                if [ "$current_digest" != "$latest_digest" ]; then
-                    current_tag=$(echo "$image" | cut -d':' -f2)
-                    
-                    # Try to get latest tag from registry
-                    latest_tag=$(docker manifest inspect "$image" 2>/dev/null | jq -r '.annotations."org.opencontainers.image.version" // empty' 2>/dev/null)
-                    if [ -z "$latest_tag" ]; then
-                        latest_tag="newer"
-                    fi
-                    
-                    echo "$service_name $current_tag -> $latest_tag"
-                    updates_found="yes"
-                fi
-                
-            done <<< "$images"
-        fi
-    done <<< "$services"
-    
-    if [ -z "$updates_found" ]; then
-        echo "All services are up to date."
-    fi
-}
-
 function info {
     docker image inspect --format '{{json .}}' "$1" | jq -r '. | {Id: .Id, Digest: .Digest, RepoDigests: .RepoDigests, Labels: .Config.Labels}'
 }
@@ -283,34 +207,9 @@ function default {
 }
 
 function help {
-    echo "$0 <task> [services...]"
-    echo ""
-    echo "Service Management Tasks:"
-    echo "  start [services...]   - Start all services or specific ones"
-    echo "  stop [services...]    - Stop all services or specific ones"
-    echo "  restart [services...] - Restart all services or specific ones"
-    echo "  update [services...]  - Update all services or specific ones"
-    echo "  check [services...]   - Check for image updates"
-    echo "  status               - Show service status"
-    echo "  cleanup              - Clean up Docker images"
-    echo "  info IMAGE_NAME      - Get Docker image info"
-    echo ""
-    echo "Examples:"
-    echo "  $0 start                    # Start all services"
-    echo "  $0 start caddy homer        # Start specific services"
-    echo "  $0 stop vaultwarden         # Stop specific service"
-    echo "  $0 check                    # Check all services for updates"
-    echo "  $0 check caddy miniflux     # Check specific services"
-    echo "  $0 status                   # Show all services"
-    echo ""
-    echo "Setup Scripts (run separately):"
-    echo "  ./setup.sh              - Initial system setup"
-    echo "  ./post-setup.sh         - Post-installation configuration"
-    echo ""
-    echo "Service Types:"
-    echo "  [Docker]  - Has docker-compose.yml"
-    echo "  [Scripts] - Has start.sh/stop.sh"
-    echo "  [Caddy]   - Caddy config only (external services)"
+    echo "$0 <task> <args>"
+    echo "Tasks:"
+    compgen -A function | cat -n
 }
 
 TIMEFORMAT="Task completed in %3lR"

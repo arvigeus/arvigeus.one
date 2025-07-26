@@ -3,7 +3,8 @@
     {
       "name": "Vaultwarden",
       "subtitle": "Password management",
-      "category": "System"
+      "category": "System",
+      "order": 1
     }
   ]
 }

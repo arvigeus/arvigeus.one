@@ -3,7 +3,8 @@
     {
       "name": "PocketBase",
       "subtitle": "Open Source realtime backend",
-      "category": "Productivity"
+      "category": "Productivity",
+      "order": 2
     }
   ]
 }

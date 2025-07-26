@@ -4,7 +4,8 @@
       "name": "Cockpit",
       "subtitle": "A sysadmin login session in a web browser",
       "category": "System",
-      "url": "https://system.arvigeus.one"
+      "url": "https://system.arvigeus.one",
+      "order": 2
     }
   ]
 }

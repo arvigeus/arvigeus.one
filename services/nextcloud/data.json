@@ -4,7 +4,8 @@
       "name": "Nextcloud Files",
       "subtitle": "File storage and sharing",
       "category": "Productivity",
-      "url": "https://files.arvigeus.one"
+      "url": "https://files.arvigeus.one",
+      "order": 1
     },
     {
       "name": "Nextcloud Music",

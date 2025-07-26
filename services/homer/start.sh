@@ -50,6 +50,7 @@ for service_dir in ../../services/*/; do
         category=$(echo "$entry" | jq -r '.category // "System"')
         logo_prop=$(echo "$entry" | jq -r '.logo // ""')
         url_prop=$(echo "$entry" | jq -r '.url // ""')
+        order=$(echo "$entry" | jq -r '.order // 999')
         
         # echo "  Processing UI entry: $name"
         
@@ -99,39 +100,46 @@ for service_dir in ../../services/*/; do
             caddy_conf="$service_dir/caddy.conf"
             if [ -f "$caddy_conf" ]; then
                 # Look for reverse_proxy lines and extract subdomain
-                subdomain=$(grep -E "^[a-zA-Z0-9.-]+\.\{\$DOMAIN\}" "$caddy_conf" | head -1 | cut -d'.' -f1)
+                subdomain=$(grep -E "^[a-zA-Z0-9.-]+\.\{\\\$DOMAIN\}" "$caddy_conf" | head -1 | cut -d'.' -f1)
                 if [ -n "$subdomain" ]; then
                     url="https://$subdomain.$DOMAIN"
-                    # echo "    Auto-detected URL: $url"
+                    echo "    Auto-detected URL: $url"
+                else
+                    echo "    WARNING: Could not auto-detect URL for $name - no subdomain pattern found in $caddy_conf"
                 fi
+            else
+                echo "    WARNING: No caddy.conf found for $name - URL will be missing"
             fi
         fi
         
+        # Create a temporary file for this service entry
+        temp_entry="/tmp/service_${service_name}_${name// /_}.yml"
+        
         # Build service entry
-        service_entry="      - name: \"$name\""
+        echo "      - name: \"$name\"" > "$temp_entry"
         if [ -n "$subtitle" ] && [ "$subtitle" != "null" ]; then
-            service_entry="$service_entry"$'\n'"        subtitle: \"$subtitle\""
+            echo "        subtitle: \"$subtitle\"" >> "$temp_entry"
         fi
         if [ -n "$logo_path" ]; then
-            service_entry="$service_entry"$'\n'"        logo: \"$logo_path\""
+            echo "        logo: \"$logo_path\"" >> "$temp_entry"
         fi
         if [ -n "$url" ]; then
-            service_entry="$service_entry"$'\n'"        url: \"$url\""
+            echo "        url: \"$url\"" >> "$temp_entry"
         fi
         
-        # Add to appropriate category array
+        # Store file path with order prefix for sorting
         case "$category" in
             "Entertainment")
-                entertainment_services+=("$service_entry")
+                entertainment_services+=("$order|$temp_entry")
                 ;;
             "Productivity")
-                productivity_services+=("$service_entry")
+                productivity_services+=("$order|$temp_entry")
                 ;;
             "System")
-                system_services+=("$service_entry")
+                system_services+=("$order|$temp_entry")
                 ;;
             *)
-                system_services+=("$service_entry")
+                system_services+=("$order|$temp_entry")
                 ;;
         esac
     done < <(jq -c '.ui[]' "$data_file")
@@ -155,8 +163,11 @@ if [ ${#entertainment_services[@]} -gt 0 ]; then
     services_yaml="$services_yaml"$'\n'"  - name: \"Entertainment\""
     services_yaml="$services_yaml"$'\n'"    icon: \"fas fa-music\""
     services_yaml="$services_yaml"$'\n'"    items:"
-    for service_entry in "${entertainment_services[@]}"; do
-        services_yaml="$services_yaml"$'\n'"$service_entry"
+    # Sort by order and include file contents
+    IFS=$'\n' sorted_entertainment=($(printf '%s\n' "${entertainment_services[@]}" | sort -n))
+    for service_entry in "${sorted_entertainment[@]}"; do
+        temp_file=$(echo "$service_entry" | cut -d'|' -f2-)
+        services_yaml="$services_yaml"$'\n'"$(cat "$temp_file")"
     done
     services_yaml="$services_yaml"$'\n'
 fi
@@ -166,8 +177,11 @@ if [ ${#productivity_services[@]} -gt 0 ]; then
     services_yaml="$services_yaml"$'\n'"  - name: \"Productivity\""
     services_yaml="$services_yaml"$'\n'"    icon: \"fas fa-desktop\""
     services_yaml="$services_yaml"$'\n'"    items:"
-    for service_entry in "${productivity_services[@]}"; do
-        services_yaml="$services_yaml"$'\n'"$service_entry"
+    # Sort by order and include file contents
+    IFS=$'\n' sorted_productivity=($(printf '%s\n' "${productivity_services[@]}" | sort -n))
+    for service_entry in "${sorted_productivity[@]}"; do
+        temp_file=$(echo "$service_entry" | cut -d'|' -f2-)
+        services_yaml="$services_yaml"$'\n'"$(cat "$temp_file")"
     done
     services_yaml="$services_yaml"$'\n'
 fi
@@ -177,8 +191,11 @@ if [ ${#system_services[@]} -gt 0 ]; then
     services_yaml="$services_yaml"$'\n'"  - name: \"System\""
     services_yaml="$services_yaml"$'\n'"    icon: \"fas fa-cogs\""
     services_yaml="$services_yaml"$'\n'"    items:"
-    for service_entry in "${system_services[@]}"; do
-        services_yaml="$services_yaml"$'\n'"$service_entry"
+    # Sort by order and include file contents
+    IFS=$'\n' sorted_system=($(printf '%s\n' "${system_services[@]}" | sort -n))
+    for service_entry in "${sorted_system[@]}"; do
+        temp_file=$(echo "$service_entry" | cut -d'|' -f2-)
+        services_yaml="$services_yaml"$'\n'"$(cat "$temp_file")"
     done
     services_yaml="$services_yaml"$'\n'
 fi
@@ -215,3 +232,4 @@ echo "Homer configuration generated successfully!"
 
 # Clean up temp files
 rm -f "/tmp/homer_config.yml" "/tmp/homer_config_base.yml"
+rm -f /tmp/service_*.yml

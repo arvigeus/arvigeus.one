@@ -24,11 +24,20 @@ Each service's `data.json` should contain:
       "subtitle": "Service description",
       "category": "Entertainment|Productivity|System",
       "logo": "optional/path/to/logo.png",
-      "url": "optional_url"
+      "url": "optional_url",
+      "order": 1
     }
   ]
 }
 ```
+
+**Properties:**
+- `name` (required): Display name for the service
+- `subtitle` (optional): Description text
+- `category` (optional): "Entertainment", "Productivity", or "System" (defaults to "System")
+- `logo` (optional): Path to custom logo file relative to service directory
+- `url` (optional): Direct URL (if not provided, auto-detected from caddy.conf)
+- `order` (optional): Numeric sort order within category (defaults to 999, appears last)
 
 ### 3. Logo Handling
 
@@ -47,7 +56,8 @@ Each service's `data.json` should contain:
 ### 5. Configuration Generation
 
 - Groups services by category (Entertainment, Productivity, System)
-- Uses indexed arrays to collect service entries
+- **Sorts services by `order` property** within each category (missing order = 999, appears last)
+- Uses temporary files to preserve YAML structure during sorting
 - Generates YAML structure with proper Homer format
 - Replaces placeholder in base `config.yml` template
 
@@ -88,6 +98,9 @@ Builds YAML string with proper indentation and structure for Homer categories.
 ### File Permissions
 
 All generated files are owned by `$PUID:$PGID` from environment variables.
+
+### Temporary Files
+Script creates temporary YAML files in `/tmp/service_*.yml` during processing to preserve proper YAML structure when sorting. These are automatically cleaned up after generation.
 
 ## Dependencies
 
