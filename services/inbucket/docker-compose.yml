@@ -1,0 +1,19 @@
+version: "3.7"
+services:
+  inbucket:
+    image: inbucket/inbucket:latest
+    container_name: inbucket
+    hostname: inbucket
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "25:2500"
+      - "110:1100"
+    environment:
+      - INBUCKET_SMTP_DOMAIN=${DOMAIN}
+      - INBUCKET_POP3_DOMAIN=${DOMAIN}
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

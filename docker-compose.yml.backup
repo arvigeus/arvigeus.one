@@ -1,0 +1,400 @@
+version: "3.7"
+services:
+  caddy:
+    image: caddy
+    container_name: caddy
+    restart: unless-stopped
+    hostname: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - DOMAIN
+      - HETZNER_API_TOKEN
+      - BASICAUTH_USER
+      - BASICAUTH_PASS
+    volumes:
+      - ${CONFIG}/caddy/caddy:/usr/bin/caddy:ro
+      - ${CONFIG}/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${DATA}/caddy/data:/data
+      - ${DATA}/caddy/config:/config
+
+  dockcheck-web:
+    image: "palleri/dockcheck-web:latest"
+    container_name: dockcheck-web
+    restart: unless-stopped
+    hostname: dockcheck-web
+    volumes:
+      - ${DATA}/dockcheck:/var/www/html
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    hostname: dozzle
+    environment:
+      # DOZZLE_LEVEL: debug
+      DOZZLE_TAILSIZE: 300
+      DOZZLE_FILTER: "status=running"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  homer:
+    image: b4bz/homer:latest
+    container_name: homer
+    restart: unless-stopped
+    hostname: homer
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${CONFIG}/homer/:/www/assets:ro
+
+  # joplin:
+  #   image: joplin/server:latest
+  #   depends_on:
+  #     - joplin-db
+  #   container_name: joplin
+  #   restart: unless-stopped
+  #   hostname: joplin
+  #   environment:
+  #     - APP_PORT=22300
+  #     - APP_BASE_URL=https://joplin.${DOMAIN}
+  #     - DB_CLIENT=pg
+  #     - POSTGRES_PASSWORD=joplin
+  #     - POSTGRES_DATABASE=joplin
+  #     - POSTGRES_USER=joplin
+  #     - POSTGRES_PORT=5432
+  #     - POSTGRES_HOST=joplin-db
+
+  # joplin-db:
+  #   image: postgres:14.1-alpine
+  #   hostname: joplin-db
+  #   container_name: joplin-db
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ${DATA}/joplin/db:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD", "pg_isready", "-U", "joplin"]
+  #     interval: 10s
+  #     start_period: 30s
+  #   environment:
+  #     - POSTGRES_USER=joplin
+  #     - POSTGRES_PASSWORD=joplin
+  #     - POSTGRES_HOST_AUTH_METHOD=trust
+
+  memos:
+    image: neosmemo/memos:latest
+    hostname: memos
+    container_name: memos
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/memos/:/var/opt/memos
+
+  ntfy:
+    image: binwiederhier/ntfy
+    hostname: ntfy
+    container_name: ntfy
+    restart: unless-stopped
+    command:
+      - serve
+    environment:
+      - TZ=${TZ}
+    user: ${PUID}:${PGID}
+    volumes:
+      - ${DATA}/ntfy/var/cache/ntfy:/var/cache/ntfy
+      - ${DATA}/ntfy/etc/ntfy:/etc/ntfy
+
+  apprise:
+    image: caronc/apprise:latest
+    hostname: apprise
+    container_name: apprise
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - TZ=${TZ}
+      - PGID=${PGID}
+      - PASSWORD=${PASSWORD}
+    volumes:
+      - ${DATA}/apprise/config:/config
+
+  mind:
+    image: mrcas/mind:latest
+    hostname: mind
+    container_name: mind
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ${DATA}/mind/db:/app/db
+
+  planka:
+    image: ghcr.io/plankanban/planka:latest
+    container_name: planka
+    hostname: planka
+    command: >
+      bash -c
+        "for i in `seq 1 30`; do
+          ./start.sh &&
+          s=$$? && break || s=$$?;
+          echo \"Tried $$i times. Waiting 5 seconds...\";
+          sleep 5;
+        done; (exit $$s)"
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/planka/user-avatars:/app/public/user-avatars
+      - ${DATA}/planka/project-background-images:/app/public/project-background-images
+      - ${DATA}/planka/attachments:/app/private/attachments
+    environment:
+      - BASE_URL=https://kanban.${DOMAIN}
+      - TRUST_PROXY=0
+      - DATABASE_URL=postgresql://planka:planka@planka-db/planka
+      - SECRET_KEY=${PLANKA_SECRET_KEY}
+    depends_on:
+      - planka-db
+
+  planka-db:
+    image: postgres:14.1-alpine
+    hostname: planka-db
+    container_name: planka-db
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/planka/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "planka"]
+      interval: 10s
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=planka
+      - POSTGRES_PASSWORD=planka
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    hostname: vaultwarden
+    restart: unless-stopped
+    environment:
+      - SIGNUPS_ALLOWED=false # Change to false after first login
+      - INVITATIONS_ALLOWED=true # Send invitation using admin page
+      - WEBSOCKET_ENABLED=true
+      - DOMAIN=https://vault.$DOMAIN
+      - LOG_FILE=/var/log/docker/bitwarden.log
+      - SMTP_SECURITY=$SMTP_SECURITY
+      - SMTP_EXPLICIT_TLS=$SMTP_EXPLICIT_TLS
+      - SMTP_HOST=$SMTP_HOST
+      - SMTP_PORT=$SMTP_PORT
+      - SMTP_FROM=$SMTP_FROM
+      - SMTP_USERNAME=$SMTP_USERNAME
+      - SMTP_PASSWORD=$SMTP_PASSWORD
+    volumes:
+      - ${DATA}/vaultwarden/:/data/
+      - /var/log/docker:/var/log/docker
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+  # jellyfin:
+  #   image: lscr.io/linuxserver/jellyfin
+  #   container_name: jellyfin
+  #   hostname: jellyfin
+  #   restart: unless-stopped
+  #   environment:
+  #     PUID: ${PGID}
+  #     PGID: ${PUID}
+  #     TZ: ${TZ}
+  #   volumes:
+  #     - ${DATA}/jellyfin/config:/config
+  #     - ${DATA}/nextcloud/Videos:/data/movies:ro
+  #     - ${DATA}/nextcloud/Music:/data/music:ro
+  #     - ${DATA}/nextcloud/Books:/data/books:ro
+  # devices:
+  ## Refer this: https://jellyfin.org/docs/general/administration/hardware-acceleration.html
+  #- /path/to/render/devices:/path/to/render/devices
+
+  ## To restore database from backup:
+  # docker exec -it bitwarden bash
+  # mv /data/db.sqlite3 /data/db.sqlite3.back
+  # sqlite3 /data/db.sqlite3 ".restore '/data/db-backup/select_db_file'"
+  # exit
+  # bw_backup:
+  #   container_name: bw_backup
+  #   image: bruceforce/bw_backup
+  #   restart: on-failure
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   init: true
+  #   depends_on:
+  #     - bitwarden
+  #   volumes:
+  #     - ${DATA}/vaultwarden:/data
+  #     - ${BACKUP}/backup_databases/bitwarden:/dbbackup
+  #     - /etc/timezone:/etc/timezone:ro
+  #     - /etc/localtime:/etc/localtime:ro
+  #   environment:
+  #     - DB_FILE=/data/db.sqlite3
+  #     - BACKUP_FILE=/dbbackup/backup.sqlite3
+  #     - CRON_TIME=30 4 * * *
+  #     - TIMESTAMP=true
+  #     - UID=0
+  #     - GID=0
+
+  # mealie:
+  #   image: ghcr.io/mealie-recipes/mealie:latest
+  #   container_name: mealie
+  #   hostname: mealie
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 1000M
+  #   environment:
+  #     PUID: ${PGID}
+  #     PGID: ${PUID}
+  #     TZ: ${TZ}
+  #     ALLOW_SIGNUP: "false"
+  #     # Default Recipe Settings
+  #     RECIPE_PUBLIC: "true"
+  #     RECIPE_SHOW_NUTRITION: "true"
+  #     RECIPE_SHOW_ASSETS: "true"
+  #     RECIPE_LANDSCAPE_VIEW: "true"
+  #     RECIPE_DISABLE_COMMENTS: "true"
+  #     RECIPE_DISABLE_AMOUNT: "false"
+  #     DEFAULT_EMAIL: ${EMAIL}
+  #     DEFAULT_PASSWORD: ${PASSWORD}
+  #     MAX_WORKERS: 1
+  #     WEB_CONCURRENCY: 1
+  #     BASE_URL: https://recipes.${DOMAIN}
+  #   volumes:
+  #     - ${DATA}/mealie:/app/data
+
+  rss-bridge:
+    image: rssbridge/rss-bridge:latest
+    container_name: rss-bridge
+    hostname: rss-bridge
+    restart: unless-stopped
+    volumes:
+      - ${CONFIG}/rss-bridge:/config
+
+  miniflux:
+    image: miniflux/miniflux:latest
+    container_name: miniflux
+    hostname: miniflux
+    restart: unless-stopped
+    depends_on:
+      - miniflux-db
+      - rss-bridge
+    environment:
+      - DATABASE_URL=postgresql://miniflux:miniflux@miniflux-db/miniflux?sslmode=disable
+      - BASE_URL=https://news.${DOMAIN}
+      - RUN_MIGRATIONS=1
+      - CREATE_ADMIN=1
+      - ADMIN_USERNAME=arvigeus
+      - ADMIN_PASSWORD=StrongAndComplicatedPassword
+
+  miniflux-db:
+    image: postgres:14.1-alpine
+    hostname: miniflux-db
+    container_name: miniflux-db
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/miniflux/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "miniflux"]
+      interval: 10s
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=miniflux
+      - POSTGRES_PASSWORD=miniflux
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  pocketbase:
+    # NOTE: Correct url is https://data.${DOMAIN}/_/
+    image: ghcr.io/muchobien/pocketbase:latest
+    hostname: pocketbase
+    container_name: pocketbase
+    restart: unless-stopped
+    # command:
+    #   - --encryptionEnv #optional
+    #   - ENCRYPTION #optional
+    volumes:
+      - ${DATA}/pocketbase/data:/pb_data
+      - ${DATA}/pocketbase/public:/pb_public #optional
+      - ${DATA}/pocketbase/hooks:/pb_hooks #optional
+    # environment:
+    #   ENCRYPTION: example #optional
+    healthcheck: #optional (recommended) since v0.10.0
+      test: wget --no-verbose --tries=1 --spider https://data.${DOMAIN}/api/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  wireguard:
+    environment:
+      # ⚠️ Required:
+      # Change this to your host's public address
+      - WG_HOST=vpn.${DOMAIN}
+      # Optional:
+      - PASSWORD=${PASSWORD}
+      # - WG_PORT=51820
+      # - WG_DEFAULT_ADDRESS=10.8.0.x
+      # - WG_DEFAULT_DNS=1.1.1.1
+      # - WG_ALLOWED_IPS=192.168.15.0/24, 10.0.1.0/24
+    image: weejewel/wg-easy
+    container_name: wireguard
+    hostname: wireguard
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/wireguard:/etc/wireguard
+    ports:
+      - "51820:51820/udp"
+      - "51821:51821/tcp"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+
+  linkding:
+    image: sissbruecker/linkding:latest
+    container_name: linkding
+    hostname: linkding
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/linkding:/etc/linkding/data
+    environment:
+      - LD_DISABLE_BACKGROUND_TASKS=False
+      - LD_DISABLE_URL_VALIDATION=False
+
+  inbucket:
+    image: inbucket/inbucket:latest
+    container_name: inbucket
+    hostname: inbucket
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "25:2500"
+      - "110:1100"
+    environment:
+      - INBUCKET_SMTP_DOMAIN=${DOMAIN}
+      - INBUCKET_POP3_DOMAIN=${DOMAIN}
+
+  wallabag:
+    image: wallabag/wallabag
+    container_name: wallabag
+    hostname: wallabag
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/wallabag/data:/var/www/wallabag/data
+      - ${DATA}/wallabag/images:/var/www/wallabag/web/assets/images
+    environment:
+      - SYMFONY__ENV__DOMAIN_NAME=https://research.${DOMAIN}
+      - SYMFONY__ENV__FOSUSER_REGISTRATION=false
+      - SYMFONY__ENV__FOSUSER_CONFIRMATION=false
+
+networks:
+  default:
+    external: true
+    name: $DOCKER_NETWORK

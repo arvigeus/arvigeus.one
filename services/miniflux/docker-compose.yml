@@ -1,0 +1,37 @@
+version: "3.7"
+services:
+  miniflux:
+    image: miniflux/miniflux:latest
+    container_name: miniflux
+    hostname: miniflux
+    restart: unless-stopped
+    depends_on:
+      - miniflux-db
+    environment:
+      - DATABASE_URL=postgresql://miniflux:miniflux@miniflux-db/miniflux?sslmode=disable
+      - BASE_URL=https://news.${DOMAIN}
+      - RUN_MIGRATIONS=1
+      - CREATE_ADMIN=1
+      - ADMIN_USERNAME=arvigeus
+      - ADMIN_PASSWORD=StrongAndComplicatedPassword
+
+  miniflux-db:
+    image: postgres:14.1-alpine
+    hostname: miniflux-db
+    container_name: miniflux-db
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/miniflux/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "miniflux"]
+      interval: 10s
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=miniflux
+      - POSTGRES_PASSWORD=miniflux
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

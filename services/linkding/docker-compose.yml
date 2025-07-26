@@ -1,0 +1,17 @@
+version: "3.7"
+services:
+  linkding:
+    image: sissbruecker/linkding:latest
+    container_name: linkding
+    hostname: linkding
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/linkding:/etc/linkding/data
+    environment:
+      - LD_DISABLE_BACKGROUND_TASKS=False
+      - LD_DISABLE_URL_VALIDATION=False
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

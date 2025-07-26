@@ -1,0 +1,35 @@
+version: "3.7"
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:latest
+    container_name: mealie
+    hostname: mealie
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1000M
+    environment:
+      PUID: ${PGID}
+      PGID: ${PUID}
+      TZ: ${TZ}
+      ALLOW_SIGNUP: "false"
+      # Default Recipe Settings
+      RECIPE_PUBLIC: "true"
+      RECIPE_SHOW_NUTRITION: "true"
+      RECIPE_SHOW_ASSETS: "true"
+      RECIPE_LANDSCAPE_VIEW: "true"
+      RECIPE_DISABLE_COMMENTS: "true"
+      RECIPE_DISABLE_AMOUNT: "false"
+      DEFAULT_EMAIL: ${EMAIL}
+      DEFAULT_PASSWORD: ${PASSWORD}
+      MAX_WORKERS: 1
+      WEB_CONCURRENCY: 1
+      BASE_URL: https://recipes.${DOMAIN}
+    volumes:
+      - ${DATA}/mealie:/app/data
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

@@ -1,0 +1,30 @@
+version: "3.7"
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    hostname: vaultwarden
+    restart: unless-stopped
+    environment:
+      - SIGNUPS_ALLOWED=false # Change to false after first login
+      - INVITATIONS_ALLOWED=true # Send invitation using admin page
+      - WEBSOCKET_ENABLED=true
+      - DOMAIN=https://vault.$DOMAIN
+      - LOG_FILE=/var/log/docker/bitwarden.log
+      - SMTP_SECURITY=$SMTP_SECURITY
+      - SMTP_EXPLICIT_TLS=$SMTP_EXPLICIT_TLS
+      - SMTP_HOST=$SMTP_HOST
+      - SMTP_PORT=$SMTP_PORT
+      - SMTP_FROM=$SMTP_FROM
+      - SMTP_USERNAME=$SMTP_USERNAME
+      - SMTP_PASSWORD=$SMTP_PASSWORD
+    volumes:
+      - ${DATA}/vaultwarden/:/data/
+      - /var/log/docker:/var/log/docker
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

@@ -1,0 +1,8 @@
+# Global options
+# {
+#     #acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+#     order webdav before file_server
+# }
+
+# Import all service-specific Caddy configurations
+import /etc/caddy/services/*/caddy.conf

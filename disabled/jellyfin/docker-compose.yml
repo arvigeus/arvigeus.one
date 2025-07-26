@@ -1,0 +1,24 @@
+version: "3.7"
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin
+    container_name: jellyfin
+    hostname: jellyfin
+    restart: unless-stopped
+    environment:
+      PUID: ${PGID}
+      PGID: ${PUID}
+      TZ: ${TZ}
+    volumes:
+      - ${DATA}/jellyfin/config:/config
+      - ${DATA}/nextcloud/Videos:/data/movies:ro
+      - ${DATA}/nextcloud/Music:/data/music:ro
+      - ${DATA}/nextcloud/Books:/data/books:ro
+    # devices:
+    ## Refer this: https://jellyfin.org/docs/general/administration/hardware-acceleration.html
+    #- /path/to/render/devices:/path/to/render/devices
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

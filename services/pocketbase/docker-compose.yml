@@ -1,0 +1,27 @@
+version: "3.7"
+services:
+  pocketbase:
+    # NOTE: Correct url is https://data.${DOMAIN}/_/
+    image: ghcr.io/muchobien/pocketbase:latest
+    hostname: pocketbase
+    container_name: pocketbase
+    restart: unless-stopped
+    # command:
+    #   - --encryptionEnv #optional
+    #   - ENCRYPTION #optional
+    volumes:
+      - ${DATA}/pocketbase/data:/pb_data
+      - ${DATA}/pocketbase/public:/pb_public #optional
+      - ${DATA}/pocketbase/hooks:/pb_hooks #optional
+    # environment:
+    #   ENCRYPTION: example #optional
+    healthcheck: #optional (recommended) since v0.10.0
+      test: wget --no-verbose --tries=1 --spider https://data.${DOMAIN}/api/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

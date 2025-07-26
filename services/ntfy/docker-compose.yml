@@ -1,0 +1,20 @@
+version: "3.7"
+services:
+  ntfy:
+    image: binwiederhier/ntfy
+    hostname: ntfy
+    container_name: ntfy
+    restart: unless-stopped
+    command:
+      - serve
+    environment:
+      - TZ=${TZ}
+    user: ${PUID}:${PGID}
+    volumes:
+      - ${DATA}/ntfy/var/cache/ntfy:/var/cache/ntfy
+      - ${DATA}/ntfy/etc/ntfy:/etc/ntfy
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

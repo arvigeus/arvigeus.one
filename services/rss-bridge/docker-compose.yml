@@ -1,0 +1,14 @@
+version: "3.7"
+services:
+  rss-bridge:
+    image: rssbridge/rss-bridge:latest
+    container_name: rss-bridge
+    hostname: rss-bridge
+    restart: unless-stopped
+    volumes:
+      - ./config:/config
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

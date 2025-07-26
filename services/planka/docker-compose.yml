@@ -1,0 +1,47 @@
+version: "3.7"
+services:
+  planka:
+    image: ghcr.io/plankanban/planka:latest
+    container_name: planka
+    hostname: planka
+    command: >
+      bash -c
+        "for i in `seq 1 30`; do
+          ./start.sh &&
+          s=$$? && break || s=$$?;
+          echo \"Tried $$i times. Waiting 5 seconds...\";
+          sleep 5;
+        done; (exit $$s)"
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/planka/user-avatars:/app/public/user-avatars
+      - ${DATA}/planka/project-background-images:/app/public/project-background-images
+      - ${DATA}/planka/attachments:/app/private/attachments
+    environment:
+      - BASE_URL=https://kanban.${DOMAIN}
+      - TRUST_PROXY=0
+      - DATABASE_URL=postgresql://planka:planka@planka-db/planka
+      - SECRET_KEY=${PLANKA_SECRET_KEY}
+    depends_on:
+      - planka-db
+
+  planka-db:
+    image: postgres:14.1-alpine
+    hostname: planka-db
+    container_name: planka-db
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/planka/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "planka"]
+      interval: 10s
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=planka
+      - POSTGRES_PASSWORD=planka
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

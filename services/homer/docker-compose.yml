@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  homer:
+    image: b4bz/homer:latest
+    container_name: homer
+    restart: unless-stopped
+    hostname: homer
+    environment:
+      - TZ=${TZ}
+    volumes:
+      - ./config:/www/assets:ro
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

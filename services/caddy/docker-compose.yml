@@ -1,0 +1,29 @@
+version: "3.7"
+services:
+  caddy:
+    image: caddy
+    container_name: caddy
+    restart: unless-stopped
+    hostname: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - DOMAIN
+      - HETZNER_API_TOKEN
+      - BASICAUTH_USER
+      - BASICAUTH_PASS
+    volumes:
+      - ${DATA}/caddy/caddy:/usr/bin/caddy:ro
+      - ${DATA}/caddy/data:/data
+      - ${DATA}/caddy/config:/config
+      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Mount all services directory (plug and play)
+      - ../:/etc/caddy/services:ro
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

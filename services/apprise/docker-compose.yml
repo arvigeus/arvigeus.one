@@ -1,0 +1,19 @@
+version: "3.7"
+services:
+  apprise:
+    image: caronc/apprise:latest
+    hostname: apprise
+    container_name: apprise
+    restart: unless-stopped
+    environment:
+      - PUID=${PUID}
+      - TZ=${TZ}
+      - PGID=${PGID}
+      - PASSWORD=${PASSWORD}
+    volumes:
+      - ${DATA}/apprise/config:/config
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

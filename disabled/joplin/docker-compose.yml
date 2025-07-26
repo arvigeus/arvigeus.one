@@ -1,0 +1,39 @@
+version: "3.7"
+services:
+  joplin:
+    image: joplin/server:latest
+    depends_on:
+      - joplin-db
+    container_name: joplin
+    restart: unless-stopped
+    hostname: joplin
+    environment:
+      - APP_PORT=22300
+      - APP_BASE_URL=https://joplin.${DOMAIN}
+      - DB_CLIENT=pg
+      - POSTGRES_PASSWORD=joplin
+      - POSTGRES_DATABASE=joplin
+      - POSTGRES_USER=joplin
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=joplin-db
+
+  joplin-db:
+    image: postgres:14.1-alpine
+    hostname: joplin-db
+    container_name: joplin-db
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/joplin/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "joplin"]
+      interval: 10s
+      start_period: 30s
+    environment:
+      - POSTGRES_USER=joplin
+      - POSTGRES_PASSWORD=joplin
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

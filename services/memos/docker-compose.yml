@@ -1,0 +1,14 @@
+version: "3.7"
+services:
+  memos:
+    image: neosmemo/memos:latest
+    hostname: memos
+    container_name: memos
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/memos/:/var/opt/memos
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}
