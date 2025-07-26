@@ -1,0 +1,22 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [master] # Adjust branch name as needed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 65.108.95.112
+          username: arvigeus
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/arvigeus/arvigeus.one
+            git pull origin master
+            # Optional: restart services if needed
+            # ./run.sh restart
