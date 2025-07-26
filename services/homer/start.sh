@@ -7,7 +7,7 @@ source <(grep -v '^#' "../../.env" | grep -v '^$')
 set +a
 
 # Clean up and create homer data directory
-echo "Cleaning and creating Homer data directory..."
+# echo "Cleaning and creating Homer data directory..."
 sudo rm -rf "$DATA/homer"
 sudo mkdir -p "$DATA/homer/icons"
 sudo chown -R "$PUID:$PGID" "$DATA/homer"
@@ -23,7 +23,7 @@ declare -a entertainment_services=()
 declare -a productivity_services=()
 declare -a system_services=()
 
-echo "Scanning services for Homer configuration..."
+# echo "Scanning services for Homer configuration..."
 
 # Read all service directories
 for service_dir in ../../services/*/; do
@@ -35,7 +35,7 @@ for service_dir in ../../services/*/; do
     # Skip if no data.json file
     [ ! -f "$data_file" ] && continue
     
-    echo "Processing $service_name..."
+    # echo "Processing $service_name..."
     
     # Check if ui key exists and is array
     if ! jq -e '.ui | type == "array"' "$data_file" >/dev/null 2>&1; then
@@ -51,7 +51,7 @@ for service_dir in ../../services/*/; do
         logo_prop=$(echo "$entry" | jq -r '.logo // ""')
         url_prop=$(echo "$entry" | jq -r '.url // ""')
         
-        echo "  Processing UI entry: $name"
+        # echo "  Processing UI entry: $name"
         
         # Handle logo
         logo_path=""
@@ -64,7 +64,7 @@ for service_dir in ../../services/*/; do
                 
                 # Copy if newer or doesn't exist
                 if [ ! -f "$target_logo" ] || [ "$source_logo" -nt "$target_logo" ]; then
-                    echo "    Copying logo: $logo_prop"
+                    # echo "    Copying logo: $logo_prop"
                     sudo cp "$source_logo" "$target_logo"
                     sudo chown "$PUID:$PGID" "$target_logo"
                 fi
@@ -80,7 +80,7 @@ for service_dir in ../../services/*/; do
                     
                     # Copy if newer or doesn't exist
                     if [ ! -f "$target_logo" ] || [ "$source_logo" -nt "$target_logo" ]; then
-                        echo "    Copying auto-detected logo: logo.$ext"
+                        # echo "    Copying auto-detected logo: logo.$ext"
                         sudo cp "$source_logo" "$target_logo"
                         sudo chown "$PUID:$PGID" "$target_logo"
                     fi
@@ -102,7 +102,7 @@ for service_dir in ../../services/*/; do
                 subdomain=$(grep -E "^[a-zA-Z0-9.-]+\.\{\$DOMAIN\}" "$caddy_conf" | head -1 | cut -d'.' -f1)
                 if [ -n "$subdomain" ]; then
                     url="https://$subdomain.$DOMAIN"
-                    echo "    Auto-detected URL: $url"
+                    # echo "    Auto-detected URL: $url"
                 fi
             fi
         fi
@@ -137,12 +137,12 @@ for service_dir in ../../services/*/; do
     done < <(jq -c '.ui[]' "$data_file")
 done
 
-echo "Generating Homer configuration..."
+# echo "Generating Homer configuration..."
 
 # Debug: Show what we found
-echo "Debug: Entertainment services: ${#entertainment_services[@]}"
-echo "Debug: Productivity services: ${#productivity_services[@]}"
-echo "Debug: System services: ${#system_services[@]}"
+# echo "Debug: Entertainment services: ${#entertainment_services[@]}"
+# echo "Debug: Productivity services: ${#productivity_services[@]}"
+# echo "Debug: System services: ${#system_services[@]}"
 
 # Read the base config template
 config_template=$(cat "./config/config.yml")
@@ -199,7 +199,7 @@ sudo cp "/tmp/homer_config.yml" "$DATA/homer/config.yml"
 sudo chown "$PUID:$PGID" "$DATA/homer/config.yml"
 
 # Copy other Homer files
-echo "Copying Homer configuration files..."
+# echo "Copying Homer configuration files..."
 sudo cp "./config/links.yml" "$DATA/homer/"
 sudo cp "./config/manifest.json" "$DATA/homer/"
 sudo chown "$PUID:$PGID" "$DATA/homer/links.yml" "$DATA/homer/manifest.json"
@@ -211,7 +211,7 @@ if [ -d "./config/icons" ]; then
 fi
 
 echo "Homer configuration generated successfully!"
-echo "Config written to: $DATA/homer/config.yml"
+#echo "Config written to: $DATA/homer/config.yml"
 
 # Clean up temp files
 rm -f "/tmp/homer_config.yml" "/tmp/homer_config_base.yml"

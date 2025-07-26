@@ -7,7 +7,7 @@ services:
     environment:
       - TZ=${TZ}
     volumes:
-      - ../../${DATA}/homer:/www/assets:ro
+      - ${DATA}/homer:/www/assets:ro
 
 networks:
   default:
