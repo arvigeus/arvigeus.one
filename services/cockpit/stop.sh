@@ -1,3 +1,3 @@
 #!/bin/bash
 echo "Stopping cockpit service..."
-sudo systemctl stop cockpit
+sudo systemctl stop cockpit.socket

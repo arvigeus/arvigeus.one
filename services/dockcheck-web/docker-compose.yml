@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   dockcheck-web:
     image: "palleri/dockcheck-web:latest"

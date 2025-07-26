@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   pocketbase:
     # NOTE: Correct url is https://data.${DOMAIN}/_/

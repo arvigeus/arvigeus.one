@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   inbucket:
     image: inbucket/inbucket:latest

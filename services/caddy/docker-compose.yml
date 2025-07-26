@@ -1,4 +1,3 @@
-version: "3.7"
 services:
   caddy:
     image: caddy
@@ -17,11 +16,11 @@ services:
       - BASICAUTH_PASS
     volumes:
       - ${DATA}/caddy/caddy:/usr/bin/caddy:ro
+      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
       - ${DATA}/caddy/data:/data
       - ${DATA}/caddy/config:/config
-      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
       # Mount all services directory (plug and play)
-      - ../:/etc/caddy/services:ro
+      - ../../services:/etc/caddy/services:ro
 
 networks:
   default:
