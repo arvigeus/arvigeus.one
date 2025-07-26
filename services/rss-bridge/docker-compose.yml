@@ -5,7 +5,7 @@ services:
     hostname: rss-bridge
     restart: unless-stopped
     volumes:
-      - ../../services/rss-bridge/config:/config
+      - ${SERVICES}/rss-bridge/config:/config
 
 networks:
   default:
