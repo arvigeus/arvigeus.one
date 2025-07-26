@@ -1,0 +1,9 @@
+{
+  "ui": [
+    {
+      "name": "Apprise",
+      "subtitle": "Push notification service",
+      "category": "System"
+    }
+  ]
+}

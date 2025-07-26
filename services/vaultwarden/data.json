@@ -1,0 +1,9 @@
+{
+  "ui": [
+    {
+      "name": "Vaultwarden",
+      "subtitle": "Password management",
+      "category": "System"
+    }
+  ]
+}

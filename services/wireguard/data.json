@@ -1,0 +1,9 @@
+{
+  "ui": [
+    {
+      "name": "Wireguard",
+      "subtitle": "VPN",
+      "category": "System"
+    }
+  ]
+}

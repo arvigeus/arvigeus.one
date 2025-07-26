@@ -1,0 +1,34 @@
+{
+  "ui": [
+    {
+      "name": "Nextcloud Files",
+      "subtitle": "File storage and sharing",
+      "category": "Productivity",
+      "url": "https://files.arvigeus.one"
+    },
+    {
+      "name": "Nextcloud Music",
+      "subtitle": "Music library",
+      "category": "Entertainment",
+      "url": "https://music.arvigeus.one"
+    },
+    {
+      "name": "Nextcloud Photos",
+      "subtitle": "Photo gallery",
+      "category": "Productivity",
+      "url": "https://photos.arvigeus.one"
+    },
+    {
+      "name": "Nextcloud Calendar",
+      "subtitle": "Calendar and scheduling",
+      "category": "Productivity",
+      "url": "https://calendar.arvigeus.one"
+    },
+    {
+      "name": "Nextcloud Contacts",
+      "subtitle": "Contact management",
+      "category": "Productivity",
+      "url": "https://contacts.arvigeus.one"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "ui": [
+    {
+      "name": "Dozzle",
+      "subtitle": "Realtime log viewer",
+      "category": "System"
+    }
+  ]
+}
