@@ -16,11 +16,11 @@ services:
       - BASICAUTH_PASS
     volumes:
       - ${DATA}/caddy/caddy:/usr/bin/caddy:ro
-      - ./config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../../services/caddy/config/Caddyfile:/etc/caddy/Caddyfile:ro
       - ${DATA}/caddy/data:/data
       - ${DATA}/caddy/config:/config
       # Mount all services directory (plug and play)
-      - ../services:/etc/caddy/services:ro
+      - ../../services:/etc/caddy/services:ro
 
 networks:
   default:
