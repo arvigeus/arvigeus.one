@@ -39,11 +39,6 @@ function start {
         echo "Starting services: $*"
     fi
     
-    set -a  # automatically export all variables
-    # shellcheck source=/dev/null
-    source <(grep -v '^#' "$ENV" | grep -v '^$')
-    set +a  # disable automatic export
-    
     # Get services to start
     services=$(get_services "$@") || return 1
     
@@ -93,11 +88,6 @@ function stop {
     else
         echo "Stopping services: $*"
     fi
-    
-    set -a  # automatically export all variables
-    # shellcheck source=/dev/null
-    source <(grep -v '^#' "$ENV" | grep -v '^$')
-    set +a  # disable automatic export
     
     # Get services to stop
     services=$(get_services "$@") || return 1
@@ -152,11 +142,6 @@ function update {
     else
         echo "Updating services: $*"
     fi
-    
-    set -a  # automatically export all variables
-    # shellcheck source=/dev/null
-    source <(grep -v '^#' "$ENV" | grep -v '^$')
-    set +a  # disable automatic export
     
     # Get services to update (only Docker services)
     services=$(get_services "$@") || return 1
@@ -226,11 +211,6 @@ function check {
     else
         echo "Checking for updates: $*"
     fi
-    
-    set -a  # automatically export all variables
-    # shellcheck source=/dev/null
-    source <(grep -v '^#' "$ENV" | grep -v '^$')
-    set +a  # disable automatic export
     
     # Get services to check (only Docker services)
     services=$(get_services "$@") || return 1
