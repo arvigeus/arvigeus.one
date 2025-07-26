@@ -55,9 +55,15 @@ jobs:
             # Attempt to pull
             echo "Pulling changes..."
             if git pull origin master; then
+              # Check if services directory was modified
+              if echo "$CHANGED_FILES" | grep -q '^services/'; then
+                echo "Services directory modified, restarting services..."
+                ./run.sh restart
+                echo "Services restarted successfully!"
+              else
+                echo "No services changes detected, skipping restart"
+              fi
               echo "Deployment successful!"
-              # Optional: restart services if needed
-              # ./run.sh restart
             else
               echo "Git pull failed - there may be merge conflicts"
               echo "Manual intervention required on server"
