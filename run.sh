@@ -49,6 +49,7 @@ function start {
         service_name=$(basename "$service_dir")
         if [ -f "$service_dir/start.sh" ]; then
             echo "Running start script for $service_name..."
+            chmod +x "$service_dir/start.sh"
             (cd "$service_dir" && ./start.sh)
         fi
     done <<< "$services"
@@ -119,6 +120,7 @@ function stop {
         service_name=$(basename "$service_dir")
         if [ -f "$service_dir/stop.sh" ]; then
             echo "Running stop script for $service_name..."
+            chmod +x "$service_dir/stop.sh"
             (cd "$service_dir" && ./stop.sh)
         fi
     done <<< "$services"
