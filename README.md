@@ -2,7 +2,7 @@
 
 ## System information
 
-- Debian 11
+- Debian 12
 
 ## Setup
 
@@ -118,6 +118,70 @@ DROP DATABASE $database;
 ```
 
 Replace `$database` with database name
+
+## [Unattended Upgrades](https://wiki.debian.org/UnattendedUpgrades)
+
+```sh
+sudo apt install unattended-upgrades apt-listchanges
+sudo dpkg-reconfigure --priority=low unattended-upgrades
+```
+
+Ensure /etc/apt/apt.conf.d/20auto-upgrades has:
+
+```conf
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+```
+
+Configure `/etc/apt/apt.conf.d/50unattended-upgrades`:
+
+```conf
+Unattended-Upgrade::Mail "<email>";
+Unattended-Upgrade::MailReport "only-on-error";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "false";
+Unattended-Upgrade::Automatic-Reboot "true";
+```
+
+### Mail
+
+**IMPORTANT**: Replace `<mail>` with your email!
+
+```sh
+sudo apt install msmtp msmtp-mta bsd-mailx
+```
+
+Create SMTP config at `~/.msmtprc`:
+
+```conf
+defaults
+auth           on
+tls            on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+logfile        ~/.msmtp.log
+
+account        gmail
+host           smtp.gmail.com
+port           587
+from           <mail>
+user           <mail>
+passwordeval   "gpg --quiet --for-your-eyes-only --no-tty --decrypt ~/.gmail_pass.gpg"
+
+account default : gmail
+```
+
+Encrypt your app password (Gmail requires 2FA and App Passwords):
+
+```sh
+echo "your-app-password" | gpg --encrypt --armor -r <mail> > ~/.gmail_pass.gpg
+chmod 600 ~/.gmail_pass.gpg ~/.msmtprc
+```
+
+Check mail sending:
+
+```sh
+echo "This is a test" | mail -s "Test from msmtp" <mail>
+```
 
 ## Tips and tricks
 
