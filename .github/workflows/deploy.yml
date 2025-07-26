@@ -17,6 +17,49 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/arvigeus/arvigeus.one
-            git pull origin master
-            # Optional: restart services if needed
-            # ./run.sh restart
+
+            # Check if repository is dirty (has uncommitted changes)
+            if ! git diff-index --quiet HEAD --; then
+              echo "ERROR: Repository has uncommitted changes!"
+              echo "Uncommitted files:"
+              git status --porcelain
+              echo ""
+              echo "Please commit or stash changes before deploying:"
+              echo "  git add . && git commit -m 'Manual changes' && git push"
+              echo "  OR: git stash"
+              exit 1
+            fi
+
+            # Check if there are untracked files
+            if [ -n "$(git ls-files --others --exclude-standard)" ]; then
+              echo "WARNING: Repository has untracked files:"
+              git ls-files --others --exclude-standard
+              echo ""
+              echo "Consider adding these files to .gitignore or committing them"
+              echo "Continuing deployment..."
+            fi
+
+            # Fetch latest changes
+            echo "Fetching latest changes..."
+            git fetch origin master
+
+            # Check if we're behind
+            LOCAL=$(git rev-parse HEAD)
+            REMOTE=$(git rev-parse origin/master)
+
+            if [ "$LOCAL" = "$REMOTE" ]; then
+              echo "Repository is already up to date"
+              exit 0
+            fi
+
+            # Attempt to pull
+            echo "Pulling changes..."
+            if git pull origin master; then
+              echo "Deployment successful!"
+              # Optional: restart services if needed
+              # ./run.sh restart
+            else
+              echo "Git pull failed - there may be merge conflicts"
+              echo "Manual intervention required on server"
+              exit 1
+            fi
