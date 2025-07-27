@@ -13,7 +13,7 @@ STATUS="$5"
 echo "$(date): Auto-updating $IMAGE_NAME (patch/minor: $CURRENT_TAG -> $NEW_TAG)" >> /data/diun_updates.log
 
 # Find the service directory and update
-SERVICE_DIR="/opt/services"  # Adjust this path to your services directory
+SERVICE_DIR="/opt/services"  # Mounted volume
 
 # Try to find the service by image name
 for service_path in "$SERVICE_DIR"/*; do

@@ -6,6 +6,7 @@ services:
     hostname: diun
     command: diun
     volumes:
+      - ${SERVICES}:/opt/services
       - ${SERVICES}/diun/config:/data
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
