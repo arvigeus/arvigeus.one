@@ -44,28 +44,28 @@ function start {
         fi
     done <<< "$services"
     
-    # Phase 2: Build compose file list and start Docker services
+    # Phase 2: Start Docker services individually (Podman compatibility)
     echo "Phase 2: Starting Docker services..."
-    compose_files=""
     docker_services=""
     while IFS= read -r service_dir; do
         [ -z "$service_dir" ] && continue
         if [ -f "$service_dir/docker-compose.yml" ]; then
-            compose_files="$compose_files -f $service_dir/docker-compose.yml"
-            docker_services="$docker_services $(basename "$service_dir")"
+            service_name=$(basename "$service_dir")
+            docker_services="$docker_services $service_name"
+            echo "Starting $service_name..."
+            
+            # Load environment variables for Podman compatibility
+            set -a
+            # shellcheck source=/dev/null
+            source <(grep -v '^#' "$ENV" | grep -v '^$')
+            set +a
+            
+            (cd "$service_dir" && docker compose up -d --build)
         fi
     done <<< "$services"
     
-    if [ -n "$compose_files" ]; then
-        echo "Starting Docker services:$docker_services"
-        # shellcheck disable=SC2086
-        # Load environment variables for Podman compatibility
-        set -a
-        # shellcheck source=/dev/null
-        source <(grep -v '^#' "$ENV" | grep -v '^$')
-        set +a
-        
-        docker compose $compose_files up -d --build
+    if [ -n "$docker_services" ]; then
+        echo "Started Docker services:$docker_services"
         
         # Show caddy logs if it was started
         if echo "$docker_services" | grep -q "caddy"; then
@@ -89,28 +89,28 @@ function stop {
     # Get services to stop
     services=$(get_services "$@") || return 1
     
-    # Phase 1: Stop Docker services first
+    # Phase 1: Stop Docker services individually (Podman compatibility)
     echo "Phase 1: Stopping Docker services..."
-    compose_files=""
     docker_services=""
     while IFS= read -r service_dir; do
         [ -z "$service_dir" ] && continue
         if [ -f "$service_dir/docker-compose.yml" ]; then
-            compose_files="$compose_files -f $service_dir/docker-compose.yml"
-            docker_services="$docker_services $(basename "$service_dir")"
+            service_name=$(basename "$service_dir")
+            docker_services="$docker_services $service_name"
+            echo "Stopping $service_name..."
+            
+            # Load environment variables for Podman compatibility
+            set -a
+            # shellcheck source=/dev/null
+            source <(grep -v '^#' "$ENV" | grep -v '^$')
+            set +a
+            
+            (cd "$service_dir" && docker compose down)
         fi
     done <<< "$services"
     
-    if [ -n "$compose_files" ]; then
-        echo "Stopping Docker services:$docker_services"
-        # shellcheck disable=SC2086
-        # Load environment variables for Podman compatibility
-        set -a
-        # shellcheck source=/dev/null
-        source <(grep -v '^#' "$ENV" | grep -v '^$')
-        set +a
-        
-        docker compose $compose_files down
+    if [ -n "$docker_services" ]; then
+        echo "Stopped Docker services:$docker_services"
     else
         echo "No Docker services to stop."
     fi
@@ -149,32 +149,28 @@ function update {
     # Get services to update (only Docker services)
     services=$(get_services "$@") || return 1
     
-    # Build compose file list for Docker services only
-    compose_files=""
+    # Update Docker services individually (Podman compatibility)
     docker_services=""
     while IFS= read -r service_dir; do
         [ -z "$service_dir" ] && continue
         if [ -f "$service_dir/docker-compose.yml" ]; then
-            compose_files="$compose_files -f $service_dir/docker-compose.yml"
-            docker_services="$docker_services $(basename "$service_dir")"
+            service_name=$(basename "$service_dir")
+            docker_services="$docker_services $service_name"
+            echo "Updating $service_name..."
+            
+            # Load environment variables for Podman compatibility
+            set -a
+            # shellcheck source=/dev/null
+            source <(grep -v '^#' "$ENV" | grep -v '^$')
+            set +a
+            
+            (cd "$service_dir" && docker compose pull)
+            (cd "$service_dir" && docker compose up --detach)
         fi
     done <<< "$services"
     
-    if [ -n "$compose_files" ]; then
-        echo "Updating Docker services:$docker_services"
-        echo "Pulling latest images..."
-        # shellcheck disable=SC2086
-        # Load environment variables for Podman compatibility
-        set -a
-        # shellcheck source=/dev/null
-        source <(grep -v '^#' "$ENV" | grep -v '^$')
-        set +a
-        
-        docker compose $compose_files pull
-        
-        echo "Updating services..."
-        # shellcheck disable=SC2086
-        docker compose $compose_files up --detach
+    if [ -n "$docker_services" ]; then
+        echo "Updated Docker services:$docker_services"
         
         docker image prune -f
         echo "Docker services updated!"
