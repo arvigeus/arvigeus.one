@@ -32,7 +32,28 @@ notif:
         - "{{ .Entry.Manifest.Tag }}"
         - "{{ .Entry.Status }}"
 
-  - name: mail
+  - name: mail_update
+    filter: "semver('patch') || semver('minor')"
+    mail:
+      host: ${SMTP_HOST}
+      port: ${SMTP_PORT}
+      ssl: ${SMTP_EXPLICIT_TLS}
+      username: ${SMTP_USERNAME}
+      password: ${SMTP_PASSWORD}
+      from: ${SMTP_FROM}
+      to: ${EMAIL}
+      templateTitle: "✅ Service {{ .Entry.Image.Name }} Auto-Updated"
+      templateBody: |
+        The service {{ .Entry.Image.Name }} has been automatically updated.
+
+        Update Type: {{ if semver 'patch' }}Patch{{ else }}Minor{{ end }}
+        Old Version: {{ .Entry.Image.Tag }}
+        New Version: {{ .Entry.Manifest.Tag }}
+
+        Image: {{ .Entry.Image.HubLink }}
+        Status: {{ .Entry.Status }}
+
+  - name: mail_major
     filter: "semver('major')"
     mail:
       host: ${SMTP_HOST}
