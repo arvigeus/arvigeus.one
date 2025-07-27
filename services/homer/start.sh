@@ -103,7 +103,7 @@ for service_dir in ../../services/*/; do
                 subdomain=$(grep -E "^[a-zA-Z0-9.-]+\.\{\\\$DOMAIN\}" "$caddy_conf" | head -1 | cut -d'.' -f1)
                 if [ -n "$subdomain" ]; then
                     url="https://$subdomain.$DOMAIN"
-                    echo "    Auto-detected URL: $url"
+                    # echo "    Auto-detected URL: $url"
                 else
                     echo "    WARNING: Could not auto-detect URL for $name - no subdomain pattern found in $caddy_conf"
                 fi

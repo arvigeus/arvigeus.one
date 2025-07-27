@@ -1,0 +1,10 @@
+{
+  "ui": [
+    {
+      "name": "Diun",
+      "subtitle": "Docker image update notifier",
+      "category": "System",
+      "order": 4
+    }
+  ]
+}

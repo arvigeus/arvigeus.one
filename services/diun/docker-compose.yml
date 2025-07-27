@@ -1,0 +1,21 @@
+services:
+  diun:
+    image: crazymax/diun:latest
+    container_name: diun
+    restart: unless-stopped
+    hostname: diun
+    command: diun
+    volumes:
+      - ${SERVICES}/diun/config:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=${TZ}
+      - LOG_LEVEL=info
+      - LOG_JSON=false
+    labels:
+      - "diun.enable=true"
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

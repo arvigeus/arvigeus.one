@@ -1,0 +1,59 @@
+## Diun configuration
+## https://crazymax.dev/diun/
+
+# Global configuration
+db:
+  path: /data/diun.db
+
+watch:
+  # Watch interval (every day)
+  schedule: "0 0 * * *"
+  
+  # Watch all containers by default
+  workers: 20
+  runOnStartup: true
+
+# Providers configuration
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    watchByDefault: true
+
+# Notification configuration
+notif:
+  - name: script
+    filter: "semver('patch') || semver('minor')"
+    script:
+      cmd: "/data/scripts/update_handler.sh"
+      args:
+        - "{{ .Entry.Image.HubLink }}"
+        - "{{ .Entry.Image.Name }}"
+        - "{{ .Entry.Image.Tag }}"
+        - "{{ .Entry.Manifest.Tag }}"
+        - "{{ .Entry.Status }}"
+
+  - name: mail
+    filter: "semver('major')"
+    mail:
+      host: ${SMTP_HOST}
+      port: ${SMTP_PORT}
+      ssl: ${SMTP_EXPLICIT_TLS}
+      username: ${SMTP_USERNAME}
+      password: ${SMTP_PASSWORD}
+      from: ${SMTP_FROM}
+      to: ${EMAIL}
+      templateTitle: "🔔 Major Docker Update Available"
+      templateBody: |
+        A major update is available for {{ .Entry.Image.Name }}:
+        
+        Current: {{ .Entry.Image.Tag }}
+        Available: {{ .Entry.Manifest.Tag }}
+        
+        This requires manual review before updating.
+        
+        Image: {{ .Entry.Image.HubLink }}
+        Status: {{ .Entry.Status }}
+        
+        To update manually:
+        cd /path/to/your/services/{{ .Entry.Image.Name }}
+        docker compose pull && docker compose up -d
