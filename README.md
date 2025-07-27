@@ -1,159 +1,284 @@
-# Home server
+# Self-Hosted Infrastructure
 
-## System information
+A modular self-hosted setup using Docker Compose with automated service management and reverse proxy configuration.
 
-- Debian 12
+## Architecture
 
-## Setup
+### Modular Service Structure
 
-Rename `.env.example` to `.env`
+```
+services/                    # Active services
+├── caddy/          [Docker] # Reverse proxy with auto-config
+├── homer/          [Docker] # Dashboard with auto-generation
+├── cockpit/        [Scripts]# System management (systemd service)
+├── nextcloud/      [Caddy]  # External service redirects
+└── ... (other services)
 
-Download caddy executable from [here](https://caddyserver.com/download) and move it in `config/caddy/caddy`
-
-### Docker
-
-It will be installed and configured as part of `./run.sh setup`
-
-### User
-
-Uncomment the following line in /etc/pam.d/su, by removing the leading '#':
-
-```text
-auth required pam_wheel.so
+disabled/                    # Disabled services
+├── jellyfin/               # Media server (disabled)
+├── joplin/                 # Notes app (disabled)
+└── mealie/                 # Recipe manager (disabled)
 ```
 
-Create the group wheel with root privileges:
+### Service Types
 
-```sh
-addgroup --system wheel
-```
+- **[Docker]**: Containerized services with docker-compose.yml (may also have scripts)
+- **[Scripts]**: System services managed only via start.sh/stop.sh
+- **[Caddy]**: External services with only reverse proxy config
+- **[Mixed]**: Docker services with additional start.sh/stop.sh scripts
 
-Execute `visudo` and add the following line:
+## Quick Start
 
-```text
-%wheel  ALL=(ALL)       NOPASSWD: ALL
-```
+### Initial Setup
 
-Create user and add it to the `wheel` group:
+```bash
+# 1. Configure environment
+cp .env.example .env
+# Edit .env with your domain and settings
 
-```sh
-useradd -m -g wheel arvigeus
-passwd arvigeus
-```
+# 2. Install system dependencies
+./setup.sh
 
-#### User misc
-
-Use `bash` instead of `sh`
-
-```sh
-sudo chsh -s /bin/bash $(whoami)
-```
-
-Get user info
-
-```sh
-id
-```
-
-Get all groups:
-
-```sh
-less /etc/group
-```
-
-## Running containers
-
-Allow `run.sh` to be executed:
-
-```sh
-sudo chmod +x run.sh
-```
-
-### Server
-
-**Make sure volumes for `kavita`, `dim`, `koel` are commented out!**
-
-```sh
-# First time run
-./run.sh setup
-
-# manage containers:
+# 3. Start all services
 ./run.sh start
-./run.sh stop
-./run.sh restart
-./run.sh update
 
-# A manual hack for extra tweaks
-./run.sh post-setup
-
-# Other
-./run.sh info IMAGE_NAME
+# 4. Post-installation configuration (optional)
+./post-setup.sh
 ```
 
-## Databases
+### Service Management
 
-### Add new database to postgresql
+```bash
+# All services
+./run.sh start                    # Start all active services
+./run.sh stop                     # Stop all services
+./run.sh restart                  # Restart all services
+./run.sh update                   # Update all services
+./run.sh status                   # Show service status
 
-```sh
-docker exec -it postgres psql
+# Individual services
+./run.sh start caddy homer        # Start specific services
+./run.sh stop vaultwarden         # Stop specific service
+
+# Enable/disable services
+mv services/jellyfin disabled/    # Disable service
+mv disabled/joplin services/      # Enable service
 ```
 
-```sql
-CREATE USER $database WITH PASSWORD '$database';
-CREATE DATABASE $database;
-GRANT ALL PRIVILEGES ON DATABASE $database TO $database;
+## Key Features
+
+### Automated Configuration
+
+- **Homer Dashboard**: Auto-generates from service `data.json` files
+- **Caddy Reverse Proxy**: Auto-imports service-specific configurations
+- **URL Auto-Detection**: Extracts URLs from Caddy configs automatically
+- **Logo Management**: Auto-copies and organizes service icons
+
+### Service Discovery
+
+- **Plug-and-Play**: Add services by creating folders with configs
+- **Auto-Detection**: Scripts discover and configure services automatically
+- **Mixed Types**: Supports Docker containers, system services, and external apps
+
+### CI/CD Integration
+
+- **GitHub Actions**: Auto-deploys on service changes
+- **Smart Restart**: Only restarts services when `services/` directory changes
+- **Git Safety**: Validates repository state before deployment
+
+## Adding New Services
+
+### Docker Service
+
+```bash
+# 1. Create service directory
+mkdir services/myservice
+
+# 2. Create docker-compose.yml
+cat > services/myservice/docker-compose.yml << EOF
+services:
+  myservice:
+    image: myservice/myservice:latest
+    container_name: myservice
+    restart: unless-stopped
+    volumes:
+      - \${DATA}/myservice:/data
+networks:
+  default:
+    external: true
+    name: \${DOCKER_NETWORK}
+EOF
+
+# 3. Create Caddy configuration
+cat > services/myservice/caddy.conf << EOF
+myservice.\{\$DOMAIN\} {
+    reverse_proxy myservice:8080
+    tls {
+        dns hetzner \{\$HETZNER_API_TOKEN\}
+    }
+}
+EOF
+
+# 4. Create Homer configuration
+cat > services/myservice/data.json << EOF
+{
+  "ui": [
+    {
+      "name": "My Service",
+      "subtitle": "Service description",
+      "category": "Productivity",
+      "order": 1
+    }
+  ]
+}
+EOF
+
+# 5. Start the service
+./run.sh start myservice
 ```
 
-Replace `$database` with database name
+### Script-Only Service
 
-### Remove database from postgresql
+```bash
+# 1. Create service directory
+mkdir services/myservice
 
-```sh
-docker exec -it postgres psql
+# 2. Create start script
+cat > services/myservice/start.sh << EOF
+#!/bin/bash
+echo "Starting my service..."
+sudo systemctl start myservice
+EOF
+
+# 3. Create stop script
+cat > services/myservice/stop.sh << EOF
+#!/bin/bash
+echo "Stopping my service..."
+sudo systemctl stop myservice
+EOF
+
+# 4. Make scripts executable and add to Homer
+chmod +x services/myservice/{start,stop}.sh
+# Add data.json and caddy.conf as needed
 ```
 
-```sql
-DROP USER $database;
-DROP DATABASE $database;
+### Mixed Service (Docker + Scripts)
+
+```bash
+# 1. Create service directory with docker-compose.yml (as above)
+mkdir services/myservice
+
+# 2. Add docker-compose.yml and caddy.conf (as shown above)
+
+# 3. Add custom start script for additional setup
+cat > services/myservice/start.sh << EOF
+#!/bin/bash
+echo "Performing pre-start setup..."
+# Custom initialization logic
+sudo mkdir -p /custom/path
+sudo chown \$PUID:\$PGID /custom/path
+EOF
+
+# 4. Add custom stop script for cleanup
+cat > services/myservice/stop.sh << EOF
+#!/bin/bash
+echo "Performing cleanup..."
+# Custom cleanup logic
+sudo rm -rf /tmp/myservice-*
+EOF
+
+chmod +x services/myservice/{start,stop}.sh
 ```
 
-Replace `$database` with database name
+## Configuration Files
 
-## [Unattended Upgrades](https://wiki.debian.org/UnattendedUpgrades)
+### Environment Variables (.env)
 
-```sh
-sudo apt install unattended-upgrades apt-listchanges
+```bash
+DOMAIN=yourdomain.com           # Your domain
+DATA=./data                     # Data directory path
+CONFIG=./config                 # Config directory path
+DOCKER_NETWORK=caddy_net        # Docker network name
+HETZNER_API_TOKEN=your_token    # For DNS challenges
+# ... (see .env.example for full list)
+```
+
+### Service Configuration (data.json)
+
+```json
+{
+  "ui": [
+    {
+      "name": "Service Name",
+      "subtitle": "Description",
+      "category": "Entertainment|Productivity|System",
+      "logo": "optional/path/to/logo.png",
+      "url": "optional_direct_url",
+      "order": 1
+    }
+  ]
+}
+```
+
+## System Requirements
+
+- **OS**: Debian 12 (or compatible Linux)
+- **Docker**: Installed via setup.sh
+- **Caddy**: Custom binary with Hetzner DNS plugin
+- **Domain**: With DNS API access (Hetzner)
+- **Ports**: 80, 443, 51820 (WireGuard)
+
+## Debian Setup
+
+### Initial System Configuration
+
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Create user with sudo privileges
+sudo addgroup --system wheel
+echo '%wheel ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers
+sudo useradd -m -g wheel -s /bin/bash yourusername
+sudo passwd yourusername
+
+# Configure PAM for wheel group
+sudo sed -i 's/^# auth.*pam_wheel.so/auth required pam_wheel.so/' /etc/pam.d/su
+
+# Fix hostname resolution (if needed)
+echo "127.0.0.1 localhost.localdomain localhost" | sudo tee -a /etc/hosts
+```
+
+### Unattended Upgrades
+
+```bash
+# Install unattended upgrades
+sudo apt install unattended-upgrades apt-listchanges -y
 sudo dpkg-reconfigure --priority=low unattended-upgrades
-```
 
-Ensure /etc/apt/apt.conf.d/20auto-upgrades has:
+# Configure automatic updates
+echo 'APT::Periodic::Update-Package-Lists "1";' | sudo tee /etc/apt/apt.conf.d/20auto-upgrades
+echo 'APT::Periodic::Unattended-Upgrade "1";' | sudo tee -a /etc/apt/apt.conf.d/20auto-upgrades
 
-```conf
-APT::Periodic::Update-Package-Lists "1";
-APT::Periodic::Unattended-Upgrade "1";
-```
-
-Configure `/etc/apt/apt.conf.d/50unattended-upgrades`:
-
-```conf
-Unattended-Upgrade::Mail "<email>";
+# Configure upgrade behavior
+sudo tee /etc/apt/apt.conf.d/50unattended-upgrades << EOF
+Unattended-Upgrade::Mail "your-email@domain.com";
 Unattended-Upgrade::MailReport "only-on-error";
 Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
 Unattended-Upgrade::Remove-Unused-Dependencies "false";
 Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-Time "02:00";
+EOF
 ```
 
-### Mail
+### Email Notifications (Optional)
 
-**IMPORTANT**: Replace `<mail>` with your email!
+```bash
+# Install mail tools
+sudo apt install msmtp msmtp-mta bsd-mailx -y
 
-```sh
-sudo apt install msmtp msmtp-mta bsd-mailx
-```
-
-Create SMTP config at `~/.msmtprc`:
-
-```conf
+# Configure SMTP (example for Gmail)
+cat > ~/.msmtprc << EOF
 defaults
 auth           on
 tls            on
@@ -163,35 +288,98 @@ logfile        ~/.msmtp.log
 account        gmail
 host           smtp.gmail.com
 port           587
-from           <mail>
-user           <mail>
-passwordeval   "gpg --quiet --for-your-eyes-only --no-tty --decrypt ~/.gmail_pass.gpg"
+from           your-email@gmail.com
+user           your-email@gmail.com
+password       your-app-password
 
 account default : gmail
+EOF
+
+chmod 600 ~/.msmtprc
+
+# Test email
+echo "Test message" | mail -s "Test from server" your-email@gmail.com
 ```
-
-Encrypt your app password (Gmail requires 2FA and App Passwords):
-
-```sh
-echo "your-app-password" | gpg --encrypt --armor -r <mail> > ~/.gmail_pass.gpg
-chmod 600 ~/.gmail_pass.gpg ~/.msmtprc
-```
-
-Check mail sending:
-
-```sh
-echo "This is a test" | mail -s "Test from msmtp" <mail>
-```
-
-## Tips and tricks
 
 ## Troubleshooting
 
-- `sudo: unable to resolve host localhost.localdomain: Name or service not known`: Add the following line to `/etc/hosts/`: `127.0.0.1 localhost.localdomain localhost`
-- Check if website is reachable: `nslookup arvigeus.one` and `nslookup arvigeus.one 8.8.8.8` should return the same
-- Check logs: `sudo docker container logs caddy`
-- Some containers take a lot of time to boot, meanwhile they can return 404 (not found) or 502 (bad gateway) errors
-- Check why site is not secure: <https://www.whynopadlock.com>
-- Check if docker is working: `curl -H "Content-Type: application/json" --unix-socket /var/run/docker.sock http://localhost/_ping`
-- Uncomment `DOZZLE_LEVEL: debug` in `docker-compose.yml`, then restart to see more detailed log
-- Mounting WebDAV: <https://sleeplessbeastie.eu/2017/09/04/how-to-mount-webdav-share/>
+### Common Issues
+
+```bash
+# Check service status
+./run.sh status
+
+# View logs
+docker logs caddy
+docker logs servicename
+
+# Check Caddy configuration
+docker exec caddy caddy validate --config /etc/caddy/Caddyfile
+
+# Test DNS resolution
+nslookup yourdomain.com
+nslookup subdomain.yourdomain.com
+
+# Check Docker network
+docker network ls
+docker network inspect caddy_net
+```
+
+### Service Issues
+
+- **404/502 errors**: Service may still be starting up
+- **SSL issues**: Check DNS API token and domain configuration
+- **Missing URLs**: Verify caddy.conf has correct subdomain pattern
+- **Homer not updating**: Check data.json format and run `./run.sh restart homer`
+
+### File Permissions
+
+```bash
+# Fix data directory permissions
+sudo chown -R $PUID:$PGID ./data
+
+# Fix service script permissions
+chmod +x services/*/start.sh services/*/stop.sh
+```
+
+### Network and Connectivity
+
+- **Hostname resolution**: Add `127.0.0.1 localhost.localdomain localhost` to `/etc/hosts` if getting hostname errors
+- **DNS testing**: Use `nslookup yourdomain.com` and `nslookup yourdomain.com 8.8.8.8` - should return same results
+- **SSL certificate issues**: Check <https://www.whynopadlock.com> for SSL problems
+- **Docker connectivity**: Test with `curl -H "Content-Type: application/json" --unix-socket /var/run/docker.sock http://localhost/_ping`
+
+### Service Startup Issues
+
+- **404/502 errors**: Services may take time to start - check `docker logs servicename`
+- **Port conflicts**: Ensure no other services are using ports 80, 443, 51820
+- **Volume permissions**: Check that `$DATA` directory has correct ownership
+- **Environment variables**: Verify `.env` file is properly formatted and sourced
+
+### Advanced Debugging
+
+```bash
+# Enable detailed Caddy logging
+# Uncomment DOZZLE_LEVEL: debug in dozzle service, then restart
+
+# Check Caddy config syntax
+docker exec caddy caddy validate --config /etc/caddy/Caddyfile
+
+# View all container logs
+docker logs --tail 50 caddy
+docker logs --tail 50 servicename
+
+# Check container resource usage
+docker stats
+
+# Inspect Docker networks
+docker network inspect caddy_net
+
+# Check disk space
+df -h
+du -sh ./data/*
+```
+
+### WebDAV Mounting
+
+For mounting WebDAV shares, see: <https://sleeplessbeastie.eu/2017/09/04/how-to-mount-webdav-share/>
