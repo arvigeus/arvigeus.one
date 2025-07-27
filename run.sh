@@ -59,7 +59,13 @@ function start {
     if [ -n "$compose_files" ]; then
         echo "Starting Docker services:$docker_services"
         # shellcheck disable=SC2086
-        docker compose --env-file "$ENV" $compose_files up -d --build
+        # Load environment variables for Podman compatibility
+        set -a
+        # shellcheck source=/dev/null
+        source <(grep -v '^#' "$ENV" | grep -v '^$')
+        set +a
+        
+        docker compose $compose_files up -d --build
         
         # Show caddy logs if it was started
         if echo "$docker_services" | grep -q "caddy"; then
@@ -98,7 +104,13 @@ function stop {
     if [ -n "$compose_files" ]; then
         echo "Stopping Docker services:$docker_services"
         # shellcheck disable=SC2086
-        docker compose --env-file "$ENV" $compose_files down
+        # Load environment variables for Podman compatibility
+        set -a
+        # shellcheck source=/dev/null
+        source <(grep -v '^#' "$ENV" | grep -v '^$')
+        set +a
+        
+        docker compose $compose_files down
     else
         echo "No Docker services to stop."
     fi
@@ -152,11 +164,17 @@ function update {
         echo "Updating Docker services:$docker_services"
         echo "Pulling latest images..."
         # shellcheck disable=SC2086
-        docker compose --env-file "$ENV" $compose_files pull
+        # Load environment variables for Podman compatibility
+        set -a
+        # shellcheck source=/dev/null
+        source <(grep -v '^#' "$ENV" | grep -v '^$')
+        set +a
+        
+        docker compose $compose_files pull
         
         echo "Updating services..."
         # shellcheck disable=SC2086
-        docker compose --env-file "$ENV" $compose_files up --detach
+        docker compose $compose_files up --detach
         
         docker image prune -f
         echo "Docker services updated!"

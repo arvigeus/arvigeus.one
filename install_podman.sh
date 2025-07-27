@@ -25,7 +25,8 @@ sudo apt install -y \
     podman-compose \
     podman-docker \
     cockpit-podman \
-    containernetworking-plugins
+    containernetworking-plugins \
+    uidmap
 
 echo "✅ Podman packages installed with Docker compatibility"
 
@@ -38,6 +39,9 @@ sudo systemctl enable --now podman.socket
 # Create Docker-compatible socket
 sudo rm -f /var/run/docker.sock
 sudo ln -sf /run/podman/podman.sock /var/run/docker.sock
+
+# Create nodocker file to quiet Docker emulation messages
+sudo touch /etc/containers/nodocker
 
 # Skip containers.conf to avoid conflicts - use service-level configs
 
