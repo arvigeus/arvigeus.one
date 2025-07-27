@@ -24,7 +24,8 @@ sudo apt install -y \
     podman \
     podman-compose \
     podman-docker \
-    cockpit-podman
+    cockpit-podman \
+    containernetworking-plugins
 
 echo "✅ Podman packages installed with Docker compatibility"
 
@@ -35,40 +36,16 @@ echo "Configuring Podman for Docker compatibility..."
 sudo systemctl enable --now podman.socket
 
 # Create Docker-compatible socket
+sudo rm -f /var/run/docker.sock
 sudo ln -sf /run/podman/podman.sock /var/run/docker.sock
+
+# Skip containers.conf to avoid conflicts - use service-level configs
 
 # Configure Podman to use same network as Docker
 echo "Creating compatible network..."
 sudo podman network create caddy_net 2>/dev/null || echo "Network already exists"
 
-# Configure Podman registries (for Docker Hub compatibility)
-sudo mkdir -p /etc/containers
-sudo tee /etc/containers/registries.conf << EOF
-[registries.search]
-registries = ['docker.io', 'quay.io']
-
-[registries.insecure]
-registries = []
-
-[registries.block]
-registries = []
-EOF
-
-# Configure storage to avoid conflicts
-sudo mkdir -p /etc/containers
-sudo tee /etc/containers/storage.conf << EOF
-[storage]
-driver = "overlay"
-runroot = "/run/containers/storage"
-graphroot = "/var/lib/containers/storage"
-
-[storage.options]
-additionalimagestores = [
-]
-
-[storage.options.overlay]
-mountopt = "nodev,metacopy=on"
-EOF
+# Skip global config files to avoid conflicts - use defaults
 
 # Test Podman installation
 echo "Testing Podman installation..."
@@ -82,12 +59,23 @@ fi
 
 # Test Docker compatibility
 echo "Testing Docker compatibility..."
+sleep 2  # Give socket time to be ready
+
 if docker version >/dev/null 2>&1; then
     echo "✅ Docker compatibility layer working"
     docker version
 else
-    echo "❌ Docker compatibility layer failed"
-    exit 1
+    echo "⚠️  Docker compatibility layer not working, but Podman is installed"
+    echo "You can use 'podman' commands directly"
+    echo "Or try: sudo systemctl restart podman.socket"
+fi
+
+# Test basic functionality
+echo "Testing basic container functionality..."
+if sudo podman run --rm hello-world >/dev/null 2>&1; then
+    echo "✅ Podman container functionality working"
+else
+    echo "⚠️  Basic container test failed - may need manual configuration"
 fi
 
 echo ""
