@@ -14,6 +14,13 @@ services:
       - TZ=${TZ}
       - LOG_LEVEL=info
       - LOG_JSON=false
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_EXPLICIT_TLS=${SMTP_EXPLICIT_TLS}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM=${SMTP_FROM}
+      - EMAIL=${EMAIL}
     labels:
       - "diun.enable=true"
 
