@@ -1,9 +1,0 @@
-{
-  "ui": [
-    {
-      "name": "Dockcheck",
-      "subtitle": "Docker container updates",
-      "category": "System"
-    }
-  ]
-}
