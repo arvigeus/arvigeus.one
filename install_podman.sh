@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Installing Podman alongside Docker (compatible mode)..."
+echo "Installing Podman (replacing Docker)..."
 
 # Load environment variables
 set -a
@@ -8,16 +8,25 @@ set -a
 source <(grep -v '^#' ".env" | grep -v '^$')
 set +a
 
-# YOLO mode - no backups needed
+# Stop and remove Docker first
+echo "Removing Docker..."
+sudo systemctl stop docker
+sudo systemctl disable docker
+sudo apt remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt autoremove -y
 
 # Install Podman in most compatible way
 echo "Installing Podman packages..."
 sudo apt update
+
+# Install Podman packages (no conflicts now)
 sudo apt install -y \
     podman \
     podman-compose \
     podman-docker \
     cockpit-podman
+
+echo "✅ Podman packages installed with Docker compatibility"
 
 # Configure Podman to be Docker-compatible
 echo "Configuring Podman for Docker compatibility..."
@@ -25,8 +34,8 @@ echo "Configuring Podman for Docker compatibility..."
 # Enable Podman socket (rootful for maximum compatibility)
 sudo systemctl enable --now podman.socket
 
-# Create Docker-compatible socket symlink
-sudo ln -sf /run/podman/podman.sock /var/run/docker.sock.podman
+# Create Docker-compatible socket
+sudo ln -sf /run/podman/podman.sock /var/run/docker.sock
 
 # Configure Podman to use same network as Docker
 echo "Creating compatible network..."
@@ -73,26 +82,20 @@ fi
 
 # Test Docker compatibility
 echo "Testing Docker compatibility..."
-if sudo podman-docker version >/dev/null 2>&1; then
+if docker version >/dev/null 2>&1; then
     echo "✅ Docker compatibility layer working"
+    docker version
 else
-    echo "⚠️  Docker compatibility layer may have issues"
+    echo "❌ Docker compatibility layer failed"
+    exit 1
 fi
-
-# podman_switch.sh already created separately
 
 echo ""
 echo "🎉 Podman installation complete!"
 echo ""
 echo "Next steps:"
-echo "1. Test current Docker setup: ./run.sh status"
-echo "2. Switch to Podman: ./podman_switch.sh enable"
-echo "3. Test with Podman: ./run.sh status"
-echo "4. If issues, revert: ./podman_switch.sh disable"
-echo ""
-echo "Management commands:"
-echo "  ./podman_switch.sh status   - Check current state"
-echo "  ./podman_switch.sh enable   - Use Podman"
-echo "  ./podman_switch.sh disable  - Use Docker"
+echo "1. Test Podman setup: ./run.sh status"
+echo "2. Start services: ./run.sh start"
+echo "3. If issues, restore Docker: ./install_docker.sh"
 echo ""
 echo "Cockpit Podman available at: https://system.$DOMAIN"
