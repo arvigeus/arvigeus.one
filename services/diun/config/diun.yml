@@ -21,18 +21,7 @@ providers:
 
 # Notification configuration
 notif:
-  - name: script
-    filter: "semver('patch') || semver('minor')"
-    script:
-      cmd: "/data/scripts/update_handler.sh"
-      args:
-        - "{{ .Entry.Image.HubLink }}"
-        - "{{ .Entry.Image.Name }}"
-        - "{{ .Entry.Image.Tag }}"
-        - "{{ .Entry.Manifest.Tag }}"
-        - "{{ .Entry.Status }}"
-
-  - name: mail_update
+  mail_update:
     filter: "semver('patch') || semver('minor')"
     mail:
       host: ${SMTP_HOST}
@@ -53,7 +42,7 @@ notif:
         Image: {{ .Entry.Image.HubLink }}
         Status: {{ .Entry.Status }}
 
-  - name: mail_major
+  mail_major:
     filter: "semver('major')"
     mail:
       host: ${SMTP_HOST}
@@ -78,3 +67,14 @@ notif:
         To update manually:
         cd /path/to/your/services/{{ .Entry.Image.Name }}
         docker compose pull && docker compose up -d
+
+  script:
+    filter: "semver('patch') || semver('minor')"
+    script:
+      cmd: "/data/scripts/update_handler.sh"
+      args:
+        - "{{ .Entry.Image.HubLink }}"
+        - "{{ .Entry.Image.Name }}"
+        - "{{ .Entry.Image.Tag }}"
+        - "{{ .Entry.Manifest.Tag }}"
+        - "{{ .Entry.Status }}"
