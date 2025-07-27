@@ -7,20 +7,36 @@ services:
     command: serve
     volumes:
       - ${SERVICES}:/opt/services:ro
-      - ${SERVICES}/diun/config/diun.yml:/diun.yml:ro
       - ${SERVICES}/diun/config/scripts:/data/scripts:ro
+      - ${SERVICES}/diun/data:/data
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - TZ=${TZ}
       - LOG_LEVEL=info
       - LOG_JSON=false
-      - SMTP_HOST=${SMTP_HOST}
-      - SMTP_PORT=${SMTP_PORT}
-      - SMTP_EXPLICIT_TLS=${SMTP_EXPLICIT_TLS}
-      - SMTP_USERNAME=${SMTP_USERNAME}
-      - SMTP_PASSWORD=${SMTP_PASSWORD}
-      - SMTP_FROM=${SMTP_FROM}
-      - EMAIL=${EMAIL}
+      # Database
+      - DIUN_DB_PATH=/data/diun.db
+      # Watch configuration
+      - DIUN_WATCH_SCHEDULE=0 0 * * *
+      - DIUN_WATCH_WORKERS=20
+      - DIUN_WATCH_RUNONSTARTUP=true
+      # Docker provider
+      - DIUN_PROVIDERS_DOCKER=true
+      - DIUN_PROVIDERS_DOCKER_ENDPOINT=unix:///var/run/docker.sock
+      - DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT=true
+      # Mail notifications
+      - DIUN_NOTIF_MAIL_HOST=${SMTP_HOST:-smtp.example.com}
+      - DIUN_NOTIF_MAIL_PORT=${SMTP_PORT:-587}
+      - DIUN_NOTIF_MAIL_SSL=${SMTP_EXPLICIT_TLS:-true}
+      - DIUN_NOTIF_MAIL_USERNAME=${SMTP_USERNAME:-}
+      - DIUN_NOTIF_MAIL_PASSWORD=${SMTP_PASSWORD:-}
+      - DIUN_NOTIF_MAIL_FROM=${SMTP_FROM:-noreply@example.com}
+      - DIUN_NOTIF_MAIL_TO=${EMAIL:-admin@example.com}
+      - "DIUN_NOTIF_MAIL_TEMPLATETITLE=🔔 Update available for {{ .Entry.Image.Name }}"
+      - "DIUN_NOTIF_MAIL_TEMPLATEBODY=Update available for {{ .Entry.Image.Name }}:\n\nCurrent: {{ .Entry.Image.Tag }}\nNew: {{ .Entry.Manifest.Tag }}\n\nImage: {{ .Entry.Image.HubLink }}\nStatus: {{ .Entry.Status }}\n\nUpdate will be processed automatically if it's a minor/patch version."
+      # Script notifications
+      - DIUN_NOTIF_SCRIPT_CMD=/data/scripts/update_handler.sh
+      - "DIUN_NOTIF_SCRIPT_ARGS={{ .Entry.Image.HubLink }} {{ .Entry.Image.Name }} {{ .Entry.Image.Tag }} {{ .Entry.Manifest.Tag }} {{ .Entry.Status }}"
     labels:
       - "diun.enable=true"
 
