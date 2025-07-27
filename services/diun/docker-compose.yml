@@ -4,7 +4,7 @@ services:
     container_name: diun
     restart: unless-stopped
     hostname: diun
-    command: diun
+    command: serve
     volumes:
       - ${SERVICES}:/opt/services
       - ${SERVICES}/diun/config:/data
