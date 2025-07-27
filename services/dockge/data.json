@@ -1,0 +1,10 @@
+{
+  "ui": [
+    {
+      "name": "Dockge",
+      "subtitle": "Docker Compose stack manager",
+      "category": "System",
+      "order": 2
+    }
+  ]
+}
