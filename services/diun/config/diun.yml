@@ -21,52 +21,39 @@ providers:
 
 # Notification configuration
 notif:
-  mail_update:
-    filter: "semver('patch') || semver('minor')"
-    mail:
-      host: ${SMTP_HOST}
-      port: ${SMTP_PORT}
-      ssl: ${SMTP_EXPLICIT_TLS}
-      username: ${SMTP_USERNAME}
-      password: ${SMTP_PASSWORD}
-      from: ${SMTP_FROM}
-      to: ${EMAIL}
-      templateTitle: "✅ Service {{ .Entry.Image.Name }} Auto-Updated"
-      templateBody: |
-        The service {{ .Entry.Image.Name }} has been automatically updated.
+  mail:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT}
+    ssl: ${SMTP_EXPLICIT_TLS}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    from: ${SMTP_FROM}
+    to: ${EMAIL}
+    templateTitle: >-
+      {{ if semver "major" }}🔔 Major update available for {{ .Entry.Image.Name }}{{ else }}✅ Service {{ .Entry.Image.Name }} auto-updated{{ end }}
+    templateBody: |
+      {{ if semver "major" }}A major update is available for {{ .Entry.Image.Name }}:
 
-        Update Type: {{ if semver 'patch' }}Patch{{ else }}Minor{{ end }}
-        Old Version: {{ .Entry.Image.Tag }}
-        New Version: {{ .Entry.Manifest.Tag }}
+      Current: {{ .Entry.Image.Tag }}
+      Available: {{ .Entry.Manifest.Tag }}
 
-        Image: {{ .Entry.Image.HubLink }}
-        Status: {{ .Entry.Status }}
+      This requires manual review before updating.
 
-  mail_major:
-    filter: "semver('major')"
-    mail:
-      host: ${SMTP_HOST}
-      port: ${SMTP_PORT}
-      ssl: ${SMTP_EXPLICIT_TLS}
-      username: ${SMTP_USERNAME}
-      password: ${SMTP_PASSWORD}
-      from: ${SMTP_FROM}
-      to: ${EMAIL}
-      templateTitle: "🔔 Major Docker Update Available"
-      templateBody: |
-        A major update is available for {{ .Entry.Image.Name }}:
-        
-        Current: {{ .Entry.Image.Tag }}
-        Available: {{ .Entry.Manifest.Tag }}
-        
-        This requires manual review before updating.
-        
-        Image: {{ .Entry.Image.HubLink }}
-        Status: {{ .Entry.Status }}
-        
-        To update manually:
-        cd /path/to/your/services/{{ .Entry.Image.Name }}
-        docker compose pull && docker compose up -d
+      Image: {{ .Entry.Image.HubLink }}
+      Status: {{ .Entry.Status }}
+
+      To update manually:
+      cd /path/to/your/services/{{ .Entry.Image.Name }}
+      docker compose pull && docker compose up -d
+      {{ else }}The service {{ .Entry.Image.Name }} has been automatically updated.
+
+      Update Type: {{ if semver "patch" }}Patch{{ else }}Minor{{ end }}
+      Old Version: {{ .Entry.Image.Tag }}
+      New Version: {{ .Entry.Manifest.Tag }}
+
+      Image: {{ .Entry.Image.HubLink }}
+      Status: {{ .Entry.Status }}
+      {{ end }}
 
   script:
     filter: "semver('patch') || semver('minor')"
