@@ -1,28 +1,101 @@
 services:
   planka:
-    image: ghcr.io/plankanban/planka:1.26.2
+    image: ghcr.io/plankanban/planka:2.0.0-rc.3
     container_name: planka
     hostname: planka
-    command: >
-      bash -c
-        "for i in `seq 1 30`; do
-          ./start.sh &&
-          s=$$? && break || s=$$?;
-          echo \"Tried $$i times. Waiting 5 seconds...\";
-          sleep 5;
-        done; (exit $$s)"
     restart: unless-stopped
     volumes:
+      - ${DATA}/planka/favicons:/app/public/favicons
       - ${DATA}/planka/user-avatars:/app/public/user-avatars
-      - ${DATA}/planka/project-background-images:/app/public/project-background-images
+      - ${DATA}/planka/background-images:/app/public/background-images
       - ${DATA}/planka/attachments:/app/private/attachments
     environment:
       - BASE_URL=https://kanban.${DOMAIN}
       - TRUST_PROXY=0
       - DATABASE_URL=postgresql://planka:planka@planka-db/planka
       - SECRET_KEY=${PLANKA_SECRET_KEY}
+      # Optionally store in secrets - then SECRET_KEY should not be set
+      # - SECRET_KEY__FILE=/run/secrets/secret_key
+
+      # - LOG_LEVEL=warn
+
+      # - TRUST_PROXY=true
+      # - MAX_UPLOAD_FILE_SIZE=
+      # - TOKEN_EXPIRES_IN=365 # In days
+
+      # related: https://github.com/knex/knex/issues/2354
+      # As knex does not pass query parameters from the connection string,
+      # we have to use environment variables in order to pass the desired values, e.g.
+      # - PGSSLMODE=<value>
+
+      # Configure knex to accept SSL certificates
+      # - KNEX_REJECT_UNAUTHORIZED_SSL_CERTIFICATE=false
+
+      # Used for per-board notifications
+      # - DEFAULT_LANGUAGE=en-US
+
+      # Do not comment out DEFAULT_ADMIN_EMAIL if you want to prevent this user from being edited/deleted
+      # - DEFAULT_ADMIN_EMAIL=demo@demo.demo
+      # - DEFAULT_ADMIN_PASSWORD=demo
+      # Optionally store in secrets - then DEFAULT_ADMIN_PASSWORD should not be set
+      # - DEFAULT_ADMIN_PASSWORD__FILE=/run/secrets/default_admin_password
+      # - DEFAULT_ADMIN_NAME=Demo Demo
+      # - DEFAULT_ADMIN_USERNAME=demo
+
+      # - INTERNAL_ACCESS_TOKEN=
+      # - STORAGE_LIMIT=
+      # - ACTIVE_USERS_LIMIT=
+
+      # Set to true to show more detailed authentication error messages.
+      # It should not be enabled without a rate limiter for security reasons.
+      # - SHOW_DETAILED_AUTH_ERRORS=false
+
+      # - S3_ENDPOINT=
+      # - S3_REGION=
+      # - S3_ACCESS_KEY_ID=
+      # - S3_SECRET_ACCESS_KEY=
+      # Optionally store in secrets - then S3_SECRET_ACCESS_KEY should not be set
+      # - S3_SECRET_ACCESS_KEY__FILE=/run/secrets/s3_secret_access_key
+      # - S3_BUCKET=
+      # - S3_FORCE_PATH_STYLE=true
+
+      # - OIDC_ISSUER=
+      # - OIDC_CLIENT_ID=
+      # - OIDC_CLIENT_SECRET=
+      # Optionally store in secrets - then OIDC_CLIENT_SECRET should not be set
+      # - OIDC_CLIENT_SECRET__FILE=/run/secrets/oidc_client_secret
+      # - OIDC_USE_OAUTH_CALLBACK=true
+      # - OIDC_ID_TOKEN_SIGNED_RESPONSE_ALG=
+      # - OIDC_USERINFO_SIGNED_RESPONSE_ALG=
+      # - OIDC_SCOPES=openid email profile
+      # - OIDC_RESPONSE_MODE=fragment
+      # - OIDC_USE_DEFAULT_RESPONSE_MODE=true
+      # - OIDC_ADMIN_ROLES=admin
+      # - OIDC_PROJECT_OWNER_ROLES=project_owner
+      # - OIDC_BOARD_USER_ROLES=board_user
+      # - OIDC_CLAIMS_SOURCE=userinfo
+      # - OIDC_EMAIL_ATTRIBUTE=email
+      # - OIDC_NAME_ATTRIBUTE=name
+      # - OIDC_USERNAME_ATTRIBUTE=preferred_username
+      # - OIDC_ROLES_ATTRIBUTE=groups
+      # - OIDC_IGNORE_USERNAME=true
+      # - OIDC_IGNORE_ROLES=true
+      # - OIDC_ENFORCED=true
+
+      # Email Notifications (https://nodemailer.com/smtp/)
+      # - SMTP_HOST=
+      # - SMTP_PORT=587
+      # - SMTP_NAME=
+      # - SMTP_SECURE=true
+      # - SMTP_USER=
+      # - SMTP_PASSWORD=
+      # Optionally store in secrets - then SMTP_PASSWORD should not be set
+      # - SMTP_PASSWORD__FILE=/run/secrets/smtp_password
+      # - SMTP_FROM="Demo Demo" <demo@demo.demo>
+      # - SMTP_TLS_REJECT_UNAUTHORIZED=false
     depends_on:
-      - planka-db
+      planka-db:
+        condition: service_healthy
 
   planka-db:
     image: postgres:16-alpine
@@ -32,12 +105,15 @@ services:
     volumes:
       - ${DATA}/planka/db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "planka"]
+      test: ["CMD-SHELL", "pg_isready -U planka -d planka"]
       interval: 10s
+      timeout: 5s
+      retries: 5
       start_period: 30s
     environment:
       - POSTGRES_USER=planka
       - POSTGRES_PASSWORD=planka
+      - POSTGRES_DB=planka
       - POSTGRES_HOST_AUTH_METHOD=trust
 
 networks:
