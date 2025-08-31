@@ -25,7 +25,7 @@ services:
       - planka-db
 
   planka-db:
-    image: postgres:14.1-alpine
+    image: postgres:16-alpine
     hostname: planka-db
     container_name: planka-db
     restart: unless-stopped

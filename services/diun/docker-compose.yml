@@ -1,6 +1,6 @@
 services:
   diun:
-    image: crazymax/diun:4.29.0
+    image: crazymax/diun:4.30.0
     container_name: diun
     restart: unless-stopped
     hostname: diun
