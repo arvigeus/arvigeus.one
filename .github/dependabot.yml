@@ -1,0 +1,31 @@
+
+version: 2
+
+updates:
+
+  - package-ecosystem: "docker-compose"
+
+    directories:
+
+      - "/services/apprise"
+      - "/services/caddy"
+      - "/services/diun"
+      - "/services/dozzle"
+      - "/services/homer"
+      - "/services/inbucket"
+      - "/services/linkding"
+      - "/services/memos"
+      - "/services/mind"
+      - "/services/miniflux"
+      - "/services/ntfy"
+      - "/services/planka"
+      - "/services/pocketbase"
+      - "/services/rss-bridge"
+      - "/services/vaultwarden"
+      - "/services/wallabag"
+      - "/services/wireguard"
+
+    schedule:
+
+      interval: "daily"
+
