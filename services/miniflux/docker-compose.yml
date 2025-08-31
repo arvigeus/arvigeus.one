@@ -20,7 +20,7 @@ services:
     container_name: miniflux-db
     restart: unless-stopped
     volumes:
-      - ${DATA}/miniflux/db-17:/var/lib/postgresql/data
+      - ${DATA}/miniflux/db:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "miniflux"]
       interval: 10s

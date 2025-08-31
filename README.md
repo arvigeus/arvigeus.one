@@ -301,6 +301,19 @@ chmod 600 ~/.msmtprc
 echo "Test message" | mail -s "Test from server" your-email@gmail.com
 ```
 
+## Updating PostgreSQL database
+
+1. Stop container
+1. Backup database somewhere else
+1. Delete database dir
+1. Dump old database and import it into the new db
+
+```sh
+docker exec -t <db-container> pg_dumpall -U <username> > backup.sql
+cat backup.sql | docker exec -i <db-container> psql -U <username> -d <dbname>
+rm backup.sql
+```
+
 ## Troubleshooting
 
 ### Common Issues
