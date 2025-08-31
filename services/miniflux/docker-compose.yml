@@ -15,7 +15,7 @@ services:
       - ADMIN_PASSWORD=StrongAndComplicatedPassword
 
   miniflux-db:
-    image: postgres:14.1-alpine
+    image: postgres:17.6-alpine
     hostname: miniflux-db
     container_name: miniflux-db
     restart: unless-stopped
