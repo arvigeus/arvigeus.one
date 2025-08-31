@@ -1,6 +1,6 @@
 services:
   mind:
-    image: mrcas/mind:latest
+    image: mrcas/mind:v1.4.1
     hostname: mind
     container_name: mind
     restart: unless-stopped

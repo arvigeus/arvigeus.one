@@ -1,6 +1,6 @@
 services:
   homer:
-    image: b4bz/homer:latest
+    image: b4bz/homer:v25.08.1
     container_name: homer
     restart: unless-stopped
     hostname: homer

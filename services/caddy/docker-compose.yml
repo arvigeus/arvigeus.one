@@ -1,6 +1,6 @@
 services:
   caddy:
-    image: caddy
+    image: caddy:2.10.2
     container_name: caddy
     restart: unless-stopped
     hostname: caddy

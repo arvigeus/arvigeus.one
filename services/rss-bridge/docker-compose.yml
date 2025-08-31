@@ -1,6 +1,6 @@
 services:
   rss-bridge:
-    image: rssbridge/rss-bridge:latest
+    image: rssbridge/rss-bridge:2025-08-05
     container_name: rss-bridge
     hostname: rss-bridge
     restart: unless-stopped

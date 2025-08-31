@@ -1,6 +1,6 @@
 services:
   wallabag:
-    image: wallabag/wallabag
+    image: wallabag/wallabag:2.6.13
     container_name: wallabag
     hostname: wallabag
     restart: unless-stopped
