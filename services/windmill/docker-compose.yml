@@ -1,0 +1,105 @@
+services:
+  windmill_db:
+    deploy:
+      replicas: 1
+    image: postgres:16
+    container_name: windmill-db
+    hostname: windmill-db
+    shm_size: 1g
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/windmill/db:/var/lib/postgresql/data
+    expose:
+      - 5432
+    environment:
+      POSTGRES_PASSWORD: windmill
+      POSTGRES_DB: windmill
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  windmill_server:
+    image: ghcr.io/windmill-labs/windmill:1.538.0
+    container_name: windmill-server
+    hostname: windmill-server
+    pull_policy: always
+    deploy:
+      replicas: 1
+    restart: unless-stopped
+    expose:
+      - 8000
+      - 2525
+    environment:
+      - DATABASE_URL=postgres://postgres:windmill@windmill-db/windmill?sslmode=disable
+      - MODE=server
+    depends_on:
+      windmill_db:
+        condition: service_healthy
+    volumes:
+      - ${DATA}/windmill/logs:/tmp/windmill/logs
+
+  windmill_worker:
+    image: ghcr.io/windmill-labs/windmill:1.538.0
+    container_name: windmill-worker
+    hostname: windmill-worker
+    pull_policy: always
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2048M
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://postgres:windmill@windmill-db/windmill?sslmode=disable
+      - MODE=worker
+      - WORKER_GROUP=default
+    depends_on:
+      windmill_db:
+        condition: service_healthy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA}/windmill/cache:/tmp/windmill/cache
+      - ${DATA}/windmill/logs:/tmp/windmill/logs
+
+  windmill_worker_native:
+    image: ghcr.io/windmill-labs/windmill:1.538.0
+    container_name: windmill-worker-native
+    hostname: windmill-worker-native
+    pull_policy: always
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2048M
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://postgres:windmill@windmill-db/windmill?sslmode=disable
+      - MODE=worker
+      - WORKER_GROUP=native
+      - NUM_WORKERS=8
+      - SLEEP_QUEUE=200
+    depends_on:
+      windmill_db:
+        condition: service_healthy
+    volumes:
+      - ${DATA}/windmill/logs:/tmp/windmill/logs
+
+  lsp:
+    image: ghcr.io/windmill-labs/windmill-lsp:1.538.0
+    container_name: windmill-lsp
+    hostname: windmill-lsp
+    pull_policy: always
+    restart: unless-stopped
+    expose:
+      - 3001
+    volumes:
+      - ${DATA}/windmill/lsp_cache:/pyls/.cache
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}

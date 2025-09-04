@@ -1,0 +1,10 @@
+{
+  "ui": [
+    {
+      "name": "Windmill",
+      "subtitle": "Workflow automation & scripting platform",
+      "category": "Productivity",
+      "order": 1
+    }
+  ]
+}
