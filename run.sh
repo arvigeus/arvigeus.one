@@ -154,9 +154,7 @@ function update {
         # shellcheck disable=SC2086
         docker compose --env-file "$ENV" $compose_files pull
         
-        echo "Restarting services with new images..."
-        # shellcheck disable=SC2086
-        docker compose --env-file "$ENV" $compose_files down
+        echo "Updating services..."
         # shellcheck disable=SC2086
         docker compose --env-file "$ENV" $compose_files up --detach
         
@@ -189,7 +187,7 @@ function status {
     echo ""
     echo "Disabled services:"
     if [ -d "disabled" ]; then
-        find disabled -maxdepth 1 -type d -not -name "disabled" | sort | while read -r service_dir; do
+        find disabled -maxdepth 1 -type d -not -name "disabled" | sort | while read service_dir; do
             service_name=$(basename "$service_dir")
             echo "  ✗ $service_name"
         done
