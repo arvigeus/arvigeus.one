@@ -59,7 +59,7 @@ function start {
     if [ -n "$compose_files" ]; then
         echo "Starting Docker services:$docker_services"
         # shellcheck disable=SC2086
-        docker compose --env-file "$ENV" $compose_files up -d --build --remove-orphans
+        docker compose --env-file "$ENV" $compose_files up -d --build
         
         # Show caddy logs if it was started
         if echo "$docker_services" | grep -q "caddy"; then
@@ -154,9 +154,11 @@ function update {
         # shellcheck disable=SC2086
         docker compose --env-file "$ENV" $compose_files pull
         
-        echo "Updating services..."
+        echo "Restarting services with new images..."
         # shellcheck disable=SC2086
-        docker compose --env-file "$ENV" $compose_files up --detach --remove-orphans
+        docker compose --env-file "$ENV" $compose_files down
+        # shellcheck disable=SC2086
+        docker compose --env-file "$ENV" $compose_files up --detach
         
         docker image prune -f
         echo "Docker services updated!"
@@ -187,7 +189,7 @@ function status {
     echo ""
     echo "Disabled services:"
     if [ -d "disabled" ]; then
-        find disabled -maxdepth 1 -type d -not -name "disabled" | sort | while read service_dir; do
+        find disabled -maxdepth 1 -type d -not -name "disabled" | sort | while read -r service_dir; do
             service_name=$(basename "$service_dir")
             echo "  ✗ $service_name"
         done
