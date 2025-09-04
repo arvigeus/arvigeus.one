@@ -46,11 +46,11 @@ services:
     hostname: windmill-worker
     pull_policy: always
     deploy:
-      replicas: 3
+      replicas: 1
       resources:
         limits:
           cpus: "1"
-          memory: 2048M
+          memory: 1024M
     restart: unless-stopped
     environment:
       - DATABASE_URL=postgres://postgres:windmill@windmill-db/windmill?sslmode=disable
@@ -73,8 +73,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: "1"
-          memory: 2048M
+          cpus: "0.5"
+          memory: 512M
     restart: unless-stopped
     environment:
       - DATABASE_URL=postgres://postgres:windmill@windmill-db/windmill?sslmode=disable
