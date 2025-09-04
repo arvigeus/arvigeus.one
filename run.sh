@@ -59,7 +59,7 @@ function start {
     if [ -n "$compose_files" ]; then
         echo "Starting Docker services:$docker_services"
         # shellcheck disable=SC2086
-        docker compose --env-file "$ENV" $compose_files up -d --build
+        docker compose --env-file "$ENV" $compose_files up -d --build --remove-orphans
         
         # Show caddy logs if it was started
         if echo "$docker_services" | grep -q "caddy"; then
@@ -156,7 +156,7 @@ function update {
         
         echo "Updating services..."
         # shellcheck disable=SC2086
-        docker compose --env-file "$ENV" $compose_files up --detach
+        docker compose --env-file "$ENV" $compose_files up --detach --remove-orphans
         
         docker image prune -f
         echo "Docker services updated!"
