@@ -21,7 +21,7 @@ services:
       retries: 5
 
   windmill_server:
-    image: ghcr.io/windmill-labs/windmill:1.538.0
+    image: ghcr.io/windmill-labs/windmill:1.539.1
     container_name: windmill-server
     hostname: windmill-server
     pull_policy: always
@@ -41,7 +41,7 @@ services:
       - ${DATA}/windmill/logs:/tmp/windmill/logs
 
   windmill_worker:
-    image: ghcr.io/windmill-labs/windmill:1.538.0
+    image: ghcr.io/windmill-labs/windmill:1.539.1
     container_name: windmill-worker
     hostname: windmill-worker
     pull_policy: always
@@ -65,7 +65,7 @@ services:
       - ${DATA}/windmill/logs:/tmp/windmill/logs
 
   windmill_worker_native:
-    image: ghcr.io/windmill-labs/windmill:1.538.0
+    image: ghcr.io/windmill-labs/windmill:1.539.1
     container_name: windmill-worker-native
     hostname: windmill-worker-native
     pull_policy: always
