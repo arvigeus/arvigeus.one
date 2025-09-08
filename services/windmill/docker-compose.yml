@@ -89,7 +89,7 @@ services:
       - ${DATA}/windmill/logs:/tmp/windmill/logs
 
   lsp:
-    image: ghcr.io/windmill-labs/windmill-lsp:1.538.0
+    image: ghcr.io/windmill-labs/windmill-lsp:1.539.1
     container_name: windmill-lsp
     hostname: windmill-lsp
     pull_policy: always
