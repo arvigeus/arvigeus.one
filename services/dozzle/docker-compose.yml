@@ -1,6 +1,6 @@
 services:
   dozzle:
-    image: amir20/dozzle:v8.14.2
+    image: amir20/dozzle:v8.14.4
     container_name: dozzle
     restart: unless-stopped
     hostname: dozzle
