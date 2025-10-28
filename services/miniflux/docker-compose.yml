@@ -1,6 +1,6 @@
 services:
   miniflux:
-    image: miniflux/miniflux:2.2.13
+    image: miniflux/miniflux:2.2.14
     container_name: miniflux
     hostname: miniflux
     restart: unless-stopped
