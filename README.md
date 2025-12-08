@@ -277,13 +277,13 @@ EOF
 # Install mail tools
 sudo apt install msmtp msmtp-mta bsd-mailx -y
 
-# Configure SMTP (example for Gmail)
-cat > ~/.msmtprc << EOF
+# Configure global SMTP settings (example for Gmail)
+sudo bash -c 'cat > /etc/msmtprc << EOF
 defaults
 auth           on
 tls            on
 tls_trust_file /etc/ssl/certs/ca-certificates.crt
-logfile        ~/.msmtp.log
+#logfile        /var/log/msmtp.log
 
 account        gmail
 host           smtp.gmail.com
@@ -293,12 +293,72 @@ user           your-email@gmail.com
 password       your-app-password
 
 account default : gmail
-EOF
+EOF'
 
-chmod 600 ~/.msmtprc
+# Secure the config file
+sudo chmod 600 /etc/msmtprc
 
 # Test email
 echo "Test message" | mail -s "Test from server" your-email@gmail.com
+```
+
+#### Email Notifications on low disk space
+
+Create the monitoring script:
+
+```sh
+sudo cat > /usr/local/bin/check-disk-space.sh << 'EOF'
+#!/bin/bash
+
+EMAIL="your-email@gmail.com"
+THRESHOLD=90
+
+# Get filesystems over threshold
+ALERT=$(df -h | grep -vE '^Filesystem|tmpfs|cdrom|udev|overlay' | awk -v threshold=$THRESHOLD '{
+  usage = int($5);
+  if (usage >= threshold) {
+    print $6 " is at " $5 " capacity";
+  }
+}')
+
+# Send email if any filesystem is over threshold
+if [ -n "$ALERT" ]; then
+  echo "Subject: [Alert] Disk Space Warning on $(hostname)
+
+The following partitions are over ${THRESHOLD}% capacity:
+
+$ALERT
+
+Full disk usage:
+$(df -h | grep -vE '^Filesystem|tmpfs|cdrom|udev|overlay')
+
+Suggested actions:
+
+    sudo systemctl stop docker
+    sudo rm -rf /var/lib/docker
+    sudo docker network create caddy_net
+    sudo systemctl start docker
+    ./run.sh start
+
+---
+Sent from $(hostname) at $(date)" | /usr/sbin/sendmail $EMAIL
+fi
+EOF
+```
+
+Make it executable:
+
+```sh
+sudo chmod +x /usr/local/bin/check-disk-space.sh
+```
+
+Create the cron job:
+
+```sh
+sudo cat > /etc/cron.d/check-disk-space << 'EOF'
+# Check disk space daily at 8:00 AM
+0 8 * * * root /usr/local/bin/check-disk-space.sh
+EOF
 ```
 
 ## Updating PostgreSQL database
