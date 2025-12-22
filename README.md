@@ -310,16 +310,29 @@ Create the monitoring script:
 sudo cat > /usr/local/bin/check-disk-space.sh << 'EOF'
 #!/bin/bash
 
+set -euo pipefail
+
 EMAIL="your-email@gmail.com"
 THRESHOLD=90
 
 # Get filesystems over threshold
-ALERT=$(df -h | grep -vE '^Filesystem|tmpfs|cdrom|udev|overlay' | awk -v threshold=$THRESHOLD '{
-  usage = int($5);
-  if (usage >= threshold) {
-    print $6 " is at " $5 " capacity";
-  }
-}')
+check_alert() {
+  df -h | grep -vE '^Filesystem|tmpfs|cdrom|udev|overlay' | awk -v threshold=$THRESHOLD '{
+    usage = int($5);
+    if (usage >= threshold) {
+      print $6 " is at " $5 " capacity";
+    }
+  }'
+}
+
+ALERT=$(check_alert)
+
+# Try reclaiming space from Docker if needed
+if [ -n "$ALERT" ]; then
+  docker system prune -f >/dev/null 2>&1
+fi
+
+ALERT=$(check_alert)
 
 # Send email if any filesystem is over threshold
 if [ -n "$ALERT" ]; then
@@ -333,6 +346,10 @@ Full disk usage:
 $(df -h | grep -vE '^Filesystem|tmpfs|cdrom|udev|overlay')
 
 Suggested actions:
+
+    docker system prune -a --volumes -f
+
+OR
 
     sudo systemctl stop docker
     sudo rm -rf /var/lib/docker
