@@ -1,6 +1,6 @@
 services:
   linkding:
-    image: sissbruecker/linkding:1.44.2
+    image: sissbruecker/linkding:1.45.0
     container_name: linkding
     hostname: linkding
     restart: unless-stopped
