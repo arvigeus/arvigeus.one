@@ -1,0 +1,120 @@
+services:
+  journiv-valkey:
+    image: valkey/valkey:9.0-alpine
+    container_name: journiv-valkey
+    hostname: journiv-valkey
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/journiv/valkey:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  journiv-celery-worker:
+    image: swalabtech/journiv-app:v0.1.0-beta.15
+    container_name: journiv-celery-worker
+    hostname: journiv-celery-worker
+    restart: unless-stopped
+    command: celery -A app.core.celery_app worker --loglevel=info
+    volumes:
+      - ${DATA}/journiv/data:/data
+    environment:
+      - DB_DRIVER=sqlite
+      - DATABASE_URL=sqlite:////data/journiv.db
+      - REDIS_URL=redis://journiv-valkey:6379/0
+      - CELERY_BROKER_URL=redis://journiv-valkey:6379/0
+      - CELERY_RESULT_BACKEND=redis://journiv-valkey:6379/0
+      - SERVICE_ROLE=celery-worker
+      - ENVIRONMENT=production
+      - SECRET_KEY=${JOURNIV_SECRET_KEY}
+    depends_on:
+      journiv-valkey:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+        reservations:
+          memory: 256m
+
+  journiv-celery-beat:
+    image: swalabtech/journiv-app:v0.1.0-beta.15
+    container_name: journiv-celery-beat
+    hostname: journiv-celery-beat
+    restart: unless-stopped
+    command: celery -A app.core.celery_app beat --loglevel=info --scheduler redbeat.RedBeatScheduler --pidfile=/tmp/celerybeat.pid
+    volumes:
+      - ${DATA}/journiv/data:/data
+    environment:
+      - DB_DRIVER=sqlite
+      - DATABASE_URL=sqlite:////data/journiv.db
+      - REDIS_URL=redis://journiv-valkey:6379/0
+      - CELERY_BROKER_URL=redis://journiv-valkey:6379/0
+      - CELERY_RESULT_BACKEND=redis://journiv-valkey:6379/0
+      - REDBEAT_REDIS_URL=redis://journiv-valkey:6379/2
+      - SERVICE_ROLE=celery-beat
+      - ENVIRONMENT=production
+      - SECRET_KEY=${JOURNIV_SECRET_KEY}
+    depends_on:
+      journiv-valkey:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+        reservations:
+          memory: 256m
+
+  journiv:
+    image: swalabtech/journiv-app:v0.1.0-beta.15
+    container_name: journiv
+    hostname: journiv
+    restart: unless-stopped
+    volumes:
+      - ${DATA}/journiv/data:/data
+    environment:
+      - DB_DRIVER=sqlite
+      - DATABASE_URL=sqlite:////data/journiv.db
+      - REDIS_URL=redis://journiv-valkey:6379/0
+      - CELERY_BROKER_URL=redis://journiv-valkey:6379/0
+      - CELERY_RESULT_BACKEND=redis://journiv-valkey:6379/0
+      - RATE_LIMIT_STORAGE_URI=redis://journiv-valkey:6379/1
+      - SERVICE_ROLE=app
+      - ENVIRONMENT=production
+      - SECRET_KEY=${JOURNIV_SECRET_KEY}
+      - DOMAIN_NAME=https://journal.${DOMAIN}
+    depends_on:
+      journiv-valkey:
+        condition: service_healthy
+    healthcheck:
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+        reservations:
+          memory: 512m
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}
