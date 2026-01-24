@@ -100,7 +100,8 @@ services:
       - SERVICE_ROLE=app
       - ENVIRONMENT=production
       - SECRET_KEY=${JOURNIV_SECRET_KEY}
-      - DOMAIN_NAME=https://journal.${DOMAIN}
+      - DOMAIN_SCHEME=https
+      - DOMAIN_NAME=journal.${DOMAIN}
     depends_on:
       journiv-valkey:
         condition: service_healthy
