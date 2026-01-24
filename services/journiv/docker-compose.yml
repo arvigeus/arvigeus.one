@@ -14,7 +14,7 @@ services:
       start_period: 10s
 
   journiv-celery-worker:
-    image: swalabtech/journiv-app:v0.1.0-beta.15
+    image: swalabtech/journiv-app:0.1.0-beta.15
     container_name: journiv-celery-worker
     hostname: journiv-celery-worker
     restart: unless-stopped
@@ -47,7 +47,7 @@ services:
           memory: 256m
 
   journiv-celery-beat:
-    image: swalabtech/journiv-app:v0.1.0-beta.15
+    image: swalabtech/journiv-app:0.1.0-beta.15
     container_name: journiv-celery-beat
     hostname: journiv-celery-beat
     restart: unless-stopped
@@ -81,7 +81,7 @@ services:
           memory: 256m
 
   journiv:
-    image: swalabtech/journiv-app:v0.1.0-beta.15
+    image: swalabtech/journiv-app:0.1.0-beta.15
     container_name: journiv
     hostname: journiv
     restart: unless-stopped
