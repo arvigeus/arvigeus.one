@@ -102,6 +102,8 @@ services:
       - SECRET_KEY=${JOURNIV_SECRET_KEY}
       - DOMAIN_SCHEME=https
       - DOMAIN_NAME=journal.${DOMAIN}
+      - DISABLE_SIGNUP=true
+      - OIDC_ENABLED=false
     depends_on:
       journiv-valkey:
         condition: service_healthy
