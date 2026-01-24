@@ -19,6 +19,7 @@ services:
     hostname: journiv-celery-worker
     restart: unless-stopped
     command: celery -A app.core.celery_app worker --loglevel=info
+    user: "${PUID}:${PGID}"
     volumes:
       - ${DATA}/journiv/data:/data
     environment:
@@ -52,6 +53,7 @@ services:
     hostname: journiv-celery-beat
     restart: unless-stopped
     command: celery -A app.core.celery_app beat --loglevel=info --scheduler redbeat.RedBeatScheduler --pidfile=/tmp/celerybeat.pid
+    user: "${PUID}:${PGID}"
     volumes:
       - ${DATA}/journiv/data:/data
     environment:
@@ -85,6 +87,7 @@ services:
     container_name: journiv
     hostname: journiv
     restart: unless-stopped
+    user: "${PUID}:${PGID}"
     volumes:
       - ${DATA}/journiv/data:/data
     environment:
