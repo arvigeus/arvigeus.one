@@ -1,7 +1,7 @@
 services:
   pocketbase:
     # NOTE: Correct url is https://data.${DOMAIN}/_/
-    image: ghcr.io/muchobien/pocketbase:0.37.1
+    image: ghcr.io/muchobien/pocketbase:0.37.3
     hostname: pocketbase
     container_name: pocketbase
     restart: unless-stopped
