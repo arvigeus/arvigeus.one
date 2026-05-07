@@ -7,7 +7,6 @@ services:
     environment:
       - SIGNUPS_ALLOWED=false # Change to false after first login
       - INVITATIONS_ALLOWED=true # Send invitation using admin page
-      - WEBSOCKET_ENABLED=true
       - DOMAIN=https://vault.$DOMAIN
       - LOG_FILE=/var/log/docker/bitwarden.log
       - SMTP_SECURITY=$SMTP_SECURITY
