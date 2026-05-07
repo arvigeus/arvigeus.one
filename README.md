@@ -113,9 +113,6 @@ EOF
 cat > services/myservice/caddy.conf << EOF
 myservice.\{\$DOMAIN\} {
     reverse_proxy myservice:8080
-    tls {
-        dns hetzner \{\$HETZNER_API_TOKEN\}
-    }
 }
 EOF
 
@@ -199,7 +196,6 @@ DOMAIN=yourdomain.com           # Your domain
 DATA=./data                     # Data directory path
 CONFIG=./config                 # Config directory path
 DOCKER_NETWORK=caddy_net        # Docker network name
-HETZNER_API_TOKEN=your_token    # For DNS challenges
 # ... (see .env.example for full list)
 ```
 
@@ -224,8 +220,8 @@ HETZNER_API_TOKEN=your_token    # For DNS challenges
 
 - **OS**: Debian 12 (or compatible Linux)
 - **Docker**: Installed via setup.sh
-- **Caddy**: Custom binary with Hetzner DNS plugin
-- **Domain**: With DNS API access (Hetzner)
+- **Caddy**: Stock image, HTTP-01 ACME challenge (Let's Encrypt)
+- **Domain**: A/AAAA records for each subdomain pointing at the server
 - **Ports**: 80, 443, 51820 (WireGuard)
 
 ## Debian Setup
