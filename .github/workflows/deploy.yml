@@ -88,12 +88,18 @@ jobs:
               fi
             fi
 
-            # Smoke test: apex must respond 2xx
-            echo "Running smoke test against https://arvigeus.one ..."
-            if curl -sSf -o /dev/null -m 10 https://arvigeus.one; then
-              echo "Smoke test passed"
-              echo "Deployment successful!"
+            # Smoke test: ping every changed service's HTTP endpoint(s).
+            # If no services changed (e.g. only workflow/README edits), check the apex.
+            if [ -n "$CHANGED_SERVICES" ]; then
+              # shellcheck disable=SC2086
+              if ! ./run.sh smoke $CHANGED_SERVICES; then
+                echo "ERROR: Smoke test failed"
+                exit 1
+              fi
             else
-              echo "ERROR: Smoke test failed - apex did not respond healthily"
-              exit 1
+              if ! curl -sSf -o /dev/null -m 10 https://arvigeus.one; then
+                echo "ERROR: Apex smoke test failed"
+                exit 1
+              fi
             fi
+            echo "Deployment successful!"

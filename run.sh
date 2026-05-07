@@ -165,6 +165,79 @@ function update {
 	fi
 }
 
+function smoke {
+	# Load DOMAIN from .env so we can resolve {$DOMAIN} placeholders
+	set -a
+	# shellcheck source=/dev/null
+	source <(grep -v '^#' "$ENV" | grep -v '^$')
+	set +a
+
+	if [ -z "$DOMAIN" ]; then
+		echo "ERROR: DOMAIN not set in $ENV"
+		return 1
+	fi
+
+	services=$(get_services "$@") || return 1
+
+	declare -a urls=()
+	while IFS= read -r service_dir; do
+		[ -z "$service_dir" ] && continue
+
+		# Prefer explicit URLs from data.json (mirrors homer's logic)
+		data_file="$service_dir/data.json"
+		if [ -f "$data_file" ]; then
+			data_urls=$(jq -r '.ui[]?.url // empty' "$data_file" 2>/dev/null)
+			if [ -n "$data_urls" ]; then
+				while IFS= read -r u; do
+					urls+=("$u")
+				done <<<"$data_urls"
+				continue
+			fi
+		fi
+
+		# Fall back to caddy.conf hostname extraction
+		conf="$service_dir/caddy.conf"
+		[ -f "$conf" ] || continue
+		while IFS= read -r host_token; do
+			urls+=("https://${host_token//\{\$DOMAIN\}/$DOMAIN}")
+		done < <(grep -E '^[a-zA-Z0-9._{}$-]+[[:space:]]*\{[[:space:]]*$' "$conf" | sed -E 's/[[:space:]]*\{[[:space:]]*$//')
+	done <<<"$services"
+
+	if [ ${#urls[@]} -eq 0 ]; then
+		echo "No HTTP endpoints to smoke-test"
+		return 0
+	fi
+
+	echo "Smoke testing ${#urls[@]} endpoint(s)..."
+	failed=0
+	for url in "${urls[@]}"; do
+		# Up to 3 attempts to absorb container startup race
+		code=000
+		for attempt in 1 2 3; do
+			code=$(curl -sS -o /dev/null -w "%{http_code}" -m 10 --connect-timeout 5 "$url" 2>/dev/null || echo "000")
+			# 1xx-4xx = server reachable and responding (401/403 from basic_auth is healthy)
+			if [ "$code" -ge 100 ] && [ "$code" -lt 500 ]; then
+				break
+			fi
+			[ $attempt -lt 3 ] && sleep 5
+		done
+
+		if [ "$code" -ge 100 ] && [ "$code" -lt 500 ]; then
+			echo "  OK    $url ($code)"
+		else
+			echo "  FAIL  $url ($code)"
+			failed=$((failed + 1))
+		fi
+	done
+
+	if [ $failed -gt 0 ]; then
+		echo "$failed endpoint(s) unhealthy"
+		return 1
+	fi
+	echo "All endpoints healthy"
+	return 0
+}
+
 function status {
 	echo "Service status:"
 	echo "Active services:"
