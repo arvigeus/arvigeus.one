@@ -4,9 +4,14 @@ on:
   push:
     branches: [master] # Adjust branch name as needed
 
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Deploy to server
@@ -57,18 +62,38 @@ jobs:
 
             # Attempt to pull
             echo "Pulling changes..."
-            if git pull origin master; then
-              # Check if services directory was modified
-              if echo "$CHANGED_FILES" | grep -q '^services/'; then
-                echo "Services directory modified, pulling new images and restarting..."
-                ./run.sh update
-                echo "Services updated successfully!"
-              else
-                echo "No services changes detected, skipping restart"
-              fi
-              echo "Deployment successful!"
-            else
+            if ! git pull origin master; then
               echo "Git pull failed - there may be merge conflicts"
               echo "Manual intervention required on server"
+              exit 1
+            fi
+
+            # Determine which services changed
+            CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^services/' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+
+            if [ -n "$CHANGED_SERVICES" ]; then
+              echo "Updating changed services: $CHANGED_SERVICES"
+              # shellcheck disable=SC2086
+              ./run.sh update $CHANGED_SERVICES
+            else
+              echo "No service changes detected, skipping update"
+            fi
+
+            # Reload Caddy if any caddy.conf changed but the caddy container itself
+            # wasn't recreated (mount-only changes don't trigger compose to restart it)
+            if echo "$CHANGED_FILES" | grep -qE '^services/[^/]+/caddy\.conf$|^services/caddy/config/'; then
+              if ! echo " $CHANGED_SERVICES " | grep -q ' caddy '; then
+                echo "Caddy config changed, reloading Caddy..."
+                docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+              fi
+            fi
+
+            # Smoke test: apex must respond 2xx
+            echo "Running smoke test against https://arvigeus.one ..."
+            if curl -sSf -o /dev/null -m 10 https://arvigeus.one; then
+              echo "Smoke test passed"
+              echo "Deployment successful!"
+            else
+              echo "ERROR: Smoke test failed - apex did not respond healthily"
               exit 1
             fi
