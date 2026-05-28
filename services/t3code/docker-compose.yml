@@ -1,6 +1,6 @@
 services:
   t3code:
-    image: arvigeus/t3code-server:0.0.24
+    image: arvigeus/t3code-server:0.0.25
     container_name: t3code
     restart: unless-stopped
     hostname: t3code

@@ -76,6 +76,7 @@ COPY docker-entrypoint.sh /usr/local/bin/t3code-entrypoint
 RUN chmod +x /usr/local/bin/t3code-entrypoint
 
 ENV HOME=/home/node \
+  SHELL=/bin/bash \
   T3CODE_HOME=/data/t3code \
   T3CODE_WORKSPACE=/workspace \
   T3CODE_HOST=0.0.0.0 \

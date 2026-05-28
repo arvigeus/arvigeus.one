@@ -4,6 +4,7 @@ set -euo pipefail
 IMAGE="arvigeus/t3code-server"
 PLATFORM="linux/amd64"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+DOCKER="${DOCKER:-docker}"
 
 read -r -p "Version: " VERSION
 
@@ -12,9 +13,20 @@ if [[ -z "${VERSION}" ]]; then
   exit 1
 fi
 
-docker buildx build \
-  --platform "${PLATFORM}" \
-  -t "${IMAGE}:${VERSION}" \
-  -t "${IMAGE}:latest" \
-  --push \
-  "${SCRIPT_DIR}"
+if "${DOCKER}" buildx build --help 2>&1 | grep -q -- "--push"; then
+  "${DOCKER}" buildx build \
+    --platform "${PLATFORM}" \
+    -t "${IMAGE}:${VERSION}" \
+    -t "${IMAGE}:latest" \
+    --push \
+    "${SCRIPT_DIR}"
+else
+  "${DOCKER}" build \
+    --platform "${PLATFORM}" \
+    -t "${IMAGE}:${VERSION}" \
+    -t "${IMAGE}:latest" \
+    "${SCRIPT_DIR}"
+
+  "${DOCKER}" push "${IMAGE}:${VERSION}"
+  "${DOCKER}" push "${IMAGE}:latest"
+fi

@@ -39,6 +39,8 @@ Then publish and enter the version when prompted:
 
 The script tags and pushes both `arvigeus/t3code-server:<version>` and `arvigeus/t3code-server:latest`.
 
+It works with Docker Buildx and with Podman-backed `docker` aliases. To force a different command, set `DOCKER`, for example `DOCKER=podman ./images/t3code-server/publish.sh`.
+
 If push fails with `requested access to the resource is denied`, the local tag is valid but Docker Hub rejected the upload. Check:
 
 - You are logged in as the `arvigeus` Docker Hub account, or an account with write access to `arvigeus/t3code-server`.
