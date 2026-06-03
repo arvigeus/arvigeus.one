@@ -1,0 +1,24 @@
+services:
+  openchamber:
+    image: arvigeus/openchamber:1.12.0
+    container_name: openchamber
+    hostname: openchamber
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      OPENCHAMBER_HOST: 0.0.0.0
+      UI_PASSWORD: ${PASSWORD}
+    volumes:
+      - ${DATA}/openchamber/config:/home/openchamber/.config/openchamber
+      - ${DATA}/openchamber/opencode/share:/home/openchamber/.local/share/opencode
+      - ${DATA}/openchamber/opencode/state:/home/openchamber/.local/state/opencode
+      - ${DATA}/openchamber/opencode/config:/home/openchamber/.config/opencode
+      - ${DATA}/openchamber/ssh:/home/openchamber/.ssh
+      - ${DATA}/openchamber/workspaces:/home/openchamber/workspaces
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}
