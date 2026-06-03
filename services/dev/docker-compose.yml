@@ -1,0 +1,26 @@
+services:
+  dev:
+    image: arvigeus/paseo-dev:0.0.1
+    container_name: paseo-dev
+    hostname: dev
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    environment:
+      - AUTO_UPDATE=true
+      - PASEO_LISTEN=0.0.0.0:6767
+      - PASEO_HOSTNAMES=dev.${DOMAIN}
+      - PASEO_PASSWORD=${PASSWORD}
+    volumes:
+      - paseo-dev-home:/home/dev
+      - paseo-dev-workspace:/workspace
+    working_dir: /workspace
+
+volumes:
+  paseo-dev-home:
+  paseo-dev-workspace:
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}
