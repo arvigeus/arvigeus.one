@@ -23,6 +23,60 @@ function get_services {
 	fi
 }
 
+function get_container_names {
+	# shellcheck disable=SC2016
+	find services -maxdepth 2 -name docker-compose.yml -print0 \
+		| xargs -0 -r awk -F: '
+			$1 ~ /^[[:space:]]*container_name[[:space:]]*$/ {
+				name=$2
+				gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
+				gsub(/^["'\'']|["'\'']$/, "", name)
+				if (name != "") print name
+			}
+		' \
+		| sort -u
+}
+
+function contains_line {
+	local needle="$1"
+	grep -Fxq "$needle"
+}
+
+function prune-stale {
+	echo "Pruning containers not present in services/..."
+
+	active_containers=$(get_container_names)
+	if [ -z "$active_containers" ]; then
+		echo "ERROR: No active containers found in services/" >&2
+		return 1
+	fi
+
+	stale_containers=()
+	while IFS=$'\t' read -r name compose_project; do
+		[ -z "$name" ] && continue
+
+		if printf '%s\n' "$active_containers" | contains_line "$name"; then
+			continue
+		fi
+
+		# Only prune containers that Docker Compose created. This keeps unrelated
+		# manually managed containers outside this repository alone.
+		if [ -n "$compose_project" ]; then
+			stale_containers+=("$name")
+		fi
+	done < <(docker ps -a --format '{{.Names}}\t{{.Label "com.docker.compose.project"}}')
+
+	if [ ${#stale_containers[@]} -eq 0 ]; then
+		echo "No stale Compose containers found."
+	else
+		echo "Removing stale containers: ${stale_containers[*]}"
+		docker rm -f "${stale_containers[@]}"
+	fi
+
+	docker system prune -a --volumes -f
+	echo "Prune completed!"
+}
+
 function start {
 	if [ $# -eq 0 ]; then
 		echo "Starting all services..."
@@ -260,7 +314,7 @@ function status {
 	echo ""
 	echo "Disabled services:"
 	if [ -d "disabled" ]; then
-		find disabled -maxdepth 1 -type d -not -name "disabled" | sort | while read service_dir; do
+		find disabled -maxdepth 1 -type d -not -name "disabled" | sort | while read -r service_dir; do
 			service_name=$(basename "$service_dir")
 			echo "  ✗ $service_name"
 		done

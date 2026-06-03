@@ -59,6 +59,23 @@ jobs:
 
             # Check what will change before pulling
             CHANGED_FILES=$(git diff --name-only HEAD origin/master)
+            CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^services/' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+
+            REMOVED_SERVICES=""
+            for service in $CHANGED_SERVICES; do
+              if ! git cat-file -e "origin/master:services/$service" 2>/dev/null; then
+                REMOVED_SERVICES="$REMOVED_SERVICES $service"
+              fi
+            done
+
+            if [ -n "$REMOVED_SERVICES" ]; then
+              echo "Stopping removed services before pulling:$REMOVED_SERVICES"
+              # shellcheck disable=SC2086
+              if ! ./run.sh stop $REMOVED_SERVICES; then
+                echo "ERROR: Failed to stop removed services"
+                exit 1
+              fi
+            fi
 
             # Attempt to pull
             echo "Pulling changes..."
@@ -68,38 +85,45 @@ jobs:
               exit 1
             fi
 
-            # Determine which services changed
-            CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^services/' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+            ACTIVE_CHANGED_SERVICES=""
+            for service in $CHANGED_SERVICES; do
+              if [ -d "services/$service" ]; then
+                ACTIVE_CHANGED_SERVICES="$ACTIVE_CHANGED_SERVICES $service"
+              fi
+            done
 
-            if [ -n "$CHANGED_SERVICES" ]; then
-              echo "Updating changed services: $CHANGED_SERVICES"
+            if [ -n "$ACTIVE_CHANGED_SERVICES" ]; then
+              echo "Updating changed services:$ACTIVE_CHANGED_SERVICES"
               # shellcheck disable=SC2086
-              ./run.sh update $CHANGED_SERVICES
+              if ! ./run.sh update $ACTIVE_CHANGED_SERVICES; then
+                echo "ERROR: Failed to update changed services"
+                exit 1
+              fi
             else
-              echo "No service changes detected, skipping update"
+              echo "No active service changes detected, skipping update"
+            fi
+
+            if ! ./run.sh prune-stale; then
+              echo "ERROR: Failed to prune stale containers"
+              exit 1
             fi
 
             # Reload Caddy if any caddy.conf changed but the caddy container itself
             # wasn't recreated (mount-only changes don't trigger compose to restart it)
             if echo "$CHANGED_FILES" | grep -qE '^services/[^/]+/caddy\.conf$|^services/caddy/config/'; then
-              if ! echo " $CHANGED_SERVICES " | grep -q ' caddy '; then
+              if ! echo " $ACTIVE_CHANGED_SERVICES " | grep -q ' caddy '; then
                 echo "Caddy config changed, reloading Caddy..."
-                docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile
+                if ! docker exec caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile; then
+                  echo "ERROR: Failed to reload Caddy"
+                  exit 1
+                fi
               fi
             fi
 
-            # Smoke test: ping every changed service's HTTP endpoint(s).
-            # If no services changed (e.g. only workflow/README edits), check the apex.
-            if [ -n "$CHANGED_SERVICES" ]; then
-              # shellcheck disable=SC2086
-              if ! ./run.sh smoke $CHANGED_SERVICES; then
-                echo "ERROR: Smoke test failed"
-                exit 1
-              fi
-            else
-              if ! curl -sSf -o /dev/null -m 10 https://arvigeus.one; then
-                echo "ERROR: Apex smoke test failed"
-                exit 1
-              fi
+            # Smoke test every active HTTP endpoint so stale or broken services
+            # are caught even when the current push only removed a service.
+            if ! ./run.sh smoke; then
+              echo "ERROR: Smoke test failed"
+              exit 1
             fi
             echo "Deployment successful!"
