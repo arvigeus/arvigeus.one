@@ -1,6 +1,6 @@
 services:
   dev:
-    image: arvigeus/paseo-dev:0.0.3
+    image: arvigeus/paseo-dev:0.0.5
     container_name: paseo-dev
     hostname: dev
     restart: unless-stopped
