@@ -237,10 +237,10 @@ function smoke {
 	while IFS= read -r service_dir; do
 		[ -z "$service_dir" ] && continue
 
-		# Prefer explicit URLs from data.json (mirrors homer's logic)
+		# Prefer explicit health checks from data.json, then UI URLs.
 		data_file="$service_dir/data.json"
 		if [ -f "$data_file" ]; then
-			data_urls=$(jq -r '.ui[]?.url // empty' "$data_file" 2>/dev/null)
+			data_urls=$(jq -r '.ui[]? | if has("hc") then .hc else .url // empty end | select(. != false)' "$data_file" 2>/dev/null)
 			if [ -n "$data_urls" ]; then
 				while IFS= read -r u; do
 					urls+=("$u")
@@ -262,21 +262,26 @@ function smoke {
 		return 0
 	fi
 
+	curl_auth_args=()
+	if [ -n "$BASICAUTH_USER" ] && [ -n "$BASICAUTH_PASS_PLAIN" ]; then
+		curl_auth_args=(--user "${BASICAUTH_USER}:${BASICAUTH_PASS_PLAIN}")
+	fi
+
 	echo "Smoke testing ${#urls[@]} endpoint(s)..."
 	failed=0
 	for url in "${urls[@]}"; do
 		# Up to 3 attempts to absorb container startup race
 		code=000
 		for attempt in 1 2 3; do
-			code=$(curl -sS -o /dev/null -w "%{http_code}" -m 10 --connect-timeout 5 "$url" 2>/dev/null || echo "000")
-			# 1xx-4xx = server reachable and responding (401/403 from basic_auth is healthy)
-			if [ "$code" -ge 100 ] && [ "$code" -lt 500 ]; then
+			code=$(curl "${curl_auth_args[@]}" -sS -o /dev/null -w "%{http_code}" -m 10 --connect-timeout 5 "$url" 2>/dev/null || echo "000")
+			# 1xx-4xx = server reachable and responding; authenticated 401/403 means auth failed.
+			if [ "$code" -ge 100 ] && [ "$code" -lt 500 ] && { [ ${#curl_auth_args[@]} -eq 0 ] || { [ "$code" -ne 401 ] && [ "$code" -ne 403 ]; }; }; then
 				break
 			fi
 			[ $attempt -lt 3 ] && sleep 5
 		done
 
-		if [ "$code" -ge 100 ] && [ "$code" -lt 500 ]; then
+		if [ "$code" -ge 100 ] && [ "$code" -lt 500 ] && { [ ${#curl_auth_args[@]} -eq 0 ] || { [ "$code" -ne 401 ] && [ "$code" -ne 403 ]; }; }; then
 			echo "  OK    $url ($code)"
 		else
 			echo "  FAIL  $url ($code)"

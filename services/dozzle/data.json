@@ -3,7 +3,8 @@
     {
       "name": "Dozzle",
       "subtitle": "Realtime log viewer",
-      "category": "System"
+      "category": "System",
+      "hc": "https://notifications.arvigeus.one/v1/health"
     }
   ]
 }

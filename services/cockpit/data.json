@@ -5,6 +5,7 @@
       "subtitle": "A sysadmin login session in a web browser",
       "category": "System",
       "url": "https://system.arvigeus.one",
+      "hc": "https://system.arvigeus.one/ping",
       "order": 2
     },
     {
@@ -12,6 +13,7 @@
       "subtitle": "Terminal for Cockpit",
       "category": "System",
       "url": "https://system.arvigeus.one/system/terminal",
+      "hc": false,
       "order": 2
     }
   ]

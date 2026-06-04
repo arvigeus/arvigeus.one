@@ -5,6 +5,7 @@
       "subtitle": "Open Source realtime backend",
       "category": "Productivity",
       "url": "https://data.arvigeus.one/_/",
+      "hc": "https://data.arvigeus.one/api/health",
       "order": 2
     }
   ]

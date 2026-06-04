@@ -3,7 +3,8 @@
     {
       "name": "Miniflux",
       "subtitle": "Minimalist and opinionated feed reader",
-      "category": "Entertainment"
+      "category": "Entertainment",
+      "hc": "https://news.arvigeus.one/healthcheck"
     }
   ]
 }

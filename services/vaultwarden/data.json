@@ -4,6 +4,7 @@
       "name": "Vaultwarden",
       "subtitle": "Password management",
       "category": "System",
+      "hc": "https://vault.arvigeus.one/alive",
       "order": 1
     }
   ]

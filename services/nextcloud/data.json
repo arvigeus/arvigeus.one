@@ -5,31 +5,36 @@
       "subtitle": "File storage and sharing",
       "category": "Productivity",
       "url": "https://files.arvigeus.one",
+      "hc": "https://cloud.arvigeus.one/status.php",
       "order": 1
     },
     {
       "name": "Nextcloud Music",
       "subtitle": "Music library",
       "category": "Entertainment",
-      "url": "https://music.arvigeus.one"
+      "url": "https://music.arvigeus.one",
+      "hc": false
     },
     {
       "name": "Nextcloud Photos",
       "subtitle": "Photo gallery",
       "category": "Productivity",
-      "url": "https://photos.arvigeus.one"
+      "url": "https://photos.arvigeus.one",
+      "hc": false
     },
     {
       "name": "Nextcloud Calendar",
       "subtitle": "Calendar and scheduling",
       "category": "Productivity",
-      "url": "https://calendar.arvigeus.one"
+      "url": "https://calendar.arvigeus.one",
+      "hc": false
     },
     {
       "name": "Nextcloud Contacts",
       "subtitle": "Contact management",
       "category": "Productivity",
-      "url": "https://contacts.arvigeus.one"
+      "url": "https://contacts.arvigeus.one",
+      "hc": false
     }
   ]
 }

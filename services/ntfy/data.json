@@ -3,7 +3,8 @@
     {
       "name": "Ntfy",
       "subtitle": "Push notifications to your phone or desktop",
-      "category": "System"
+      "category": "System",
+      "hc": "https://notifications.arvigeus.one/v1/health"
     }
   ]
 }

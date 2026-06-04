@@ -3,7 +3,9 @@
     {
       "name": "Paseo Dev",
       "subtitle": "Remote coding agents workspace",
-      "category": "Productivity"
+      "category": "Productivity",
+      "url": "https://app.paseo.sh/",
+      "hc": "https://dev.arvigeus.one/api/health"
     }
   ]
 }
