@@ -4,8 +4,25 @@
       "name": "Paseo Dev",
       "subtitle": "Remote coding agents workspace",
       "category": "Productivity",
-      "url": "https://app.paseo.sh/",
       "hc": "https://dev.arvigeus.one/api/health"
+    },
+    {
+      "name": "Paseo Web",
+      "subtitle": "Self-hosted Paseo web client",
+      "category": "Productivity",
+      "url": "https://code.arvigeus.one/"
+    },
+    {
+      "name": "OpenCode",
+      "subtitle": "The open source AI coding agent",
+      "category": "Productivity",
+      "hc": "https://opencode.arvigeus.one"
+    },
+    {
+      "name": "Test",
+      "subtitle": "Vite",
+      "category": "Productivity",
+      "hc": false
     }
   ]
 }

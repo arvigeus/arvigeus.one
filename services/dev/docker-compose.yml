@@ -1,6 +1,6 @@
 services:
   dev:
-    image: arvigeus/paseo-dev:0.0.6
+    image: arvigeus/paseo-dev:0.0.7
     container_name: paseo-dev
     hostname: dev
     restart: unless-stopped
@@ -11,6 +11,8 @@ services:
       - PASEO_LISTEN=0.0.0.0:6767
       - PASEO_HOSTNAMES=dev.${DOMAIN}
       - PASEO_PASSWORD=${PASSWORD}
+      - PASEO_CORS_ORIGINS=https://code.${DOMAIN}
+      - OPENCODE_SERVER_PASSWORD=${PASSWORD}
     volumes:
       - paseo-dev-home:/home/dev
       - paseo-dev-workspace:/workspace
