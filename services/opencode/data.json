@@ -1,0 +1,10 @@
+{
+  "ui": [
+    {
+      "name": "OpenCode",
+      "subtitle": "Browser-based AI coding agent",
+      "category": "Productivity",
+      "hc": false
+    }
+  ]
+}

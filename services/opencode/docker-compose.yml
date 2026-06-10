@@ -1,0 +1,21 @@
+services:
+  opencode:
+    image: ghcr.io/anomalyco/opencode:latest
+    container_name: opencode
+    hostname: opencode
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    environment:
+      - HOME=/home/opencode
+      - OPENCODE_SERVER_PASSWORD=${BASICAUTH_PASS_PLAIN}
+      - OPENCODE_SERVER_USERNAME=${BASICAUTH_USER:-opencode}
+    volumes:
+      - ${DATA}/opencode/home:/home/opencode
+      - ${OPENCODE_WORKSPACE}:/workspace
+    working_dir: /workspace
+    command: ["web", "--hostname", "0.0.0.0", "--port", "4096"]
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK}
