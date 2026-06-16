@@ -4,6 +4,7 @@
       "name": "OpenCode",
       "subtitle": "Browser-based AI coding agent",
       "category": "Productivity",
+      "url": "https://opencode.arvigeus.one",
       "hc": false
     },
     {
@@ -11,6 +12,7 @@
       "subtitle": "Local development server backed",
       "category": "Productivity",
       "logo": "vite.svg",
+      "url": "https://preview.arvigeus.one",
       "hc": false
     }
   ]

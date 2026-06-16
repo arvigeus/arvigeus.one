@@ -240,11 +240,14 @@ function smoke {
 		# Prefer explicit health checks from data.json, then UI URLs.
 		data_file="$service_dir/data.json"
 		if [ -f "$data_file" ]; then
-			data_urls=$(jq -r '.ui[]? | if has("hc") then .hc else .url // empty end | select(. != false)' "$data_file" 2>/dev/null)
-			if [ -n "$data_urls" ]; then
-				while IFS= read -r u; do
-					urls+=("$u")
-				done <<<"$data_urls"
+			has_ui=$(jq '[.ui[]?] | length' "$data_file" 2>/dev/null)
+			if [ "$has_ui" -gt 0 ]; then
+				data_urls=$(jq -r '.ui[]? | if has("hc") then .hc else .url // empty end | select(. != false)' "$data_file" 2>/dev/null)
+				if [ -n "$data_urls" ]; then
+					while IFS= read -r u; do
+						urls+=("$u")
+					done <<<"$data_urls"
+				fi
 				continue
 			fi
 		fi
