@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg xmlns="http://www.w3.org/2000/svg"
+aria-label="NextCloud" role="img"
+viewBox="0 0 512 512">
+
+<defs>
+  <linearGradient id="nc-bg" x1="85%" y1="5%" x2="15%" y2="95%">
+    <stop offset="0%" stop-color="#18A8F5"/>
+    <stop offset="45%" stop-color="#0D98E4"/>
+    <stop offset="100%" stop-color="#078BD3"/>
+  </linearGradient>
+</defs>
+
+<path
+  fill="url(#nc-bg)"
+  d="M213 0H299C416 0 512 96 512 213V299C512 416 416 512 299 512H213C96 512 0 416 0 299V213C0 96 96 0 213 0Z"
+/>
+
+<g stroke="#ffffff" stroke-width="33" fill="none">
+
+<circle r="40" cy="256" cx="120"/>
+
+<circle r="71" cy="256" cx="256"/>
+
+<circle r="40" cy="256" cx="392"/>
+
+</g>
+
+</svg>

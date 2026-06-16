@@ -1,0 +1,17 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" aria-label="Calendar" role="img">
+  <defs>
+  <linearGradient id="nc-bg" x1="85%" y1="5%" x2="15%" y2="95%">
+    <stop offset="0%" stop-color="#18A8F5"/>
+    <stop offset="45%" stop-color="#0D98E4"/>
+    <stop offset="100%" stop-color="#078BD3"/>
+  </linearGradient>
+</defs>
+
+<path
+  fill="url(#nc-bg)"
+  d="M213 0H299C416 0 512 96 512 213V299C512 416 416 512 299 512H213C96 512 0 416 0 299V213C0 96 96 0 213 0Z"
+/>
+  <g fill="#fff" transform="translate(96 96) scale(10)">
+    <path d="M7 30c-.55 0-1.021-.196-1.412-.587A1.927 1.927 0 0 1 5 28V8c0-.55.196-1.021.588-1.413A1.926 1.926 0 0 1 7 6h1V3h3v3h10V3h3v3h1c.55 0 1.021.196 1.413.587.391.392.587.863.587 1.413v20a1.93 1.93 0 0 1-.587 1.413A1.93 1.93 0 0 1 25 30H7Zm0-3h18V14H7v13Z"/>
+  </g>
+</svg>

@@ -5,6 +5,7 @@
       "subtitle": "File storage and sharing",
       "category": "Productivity",
       "url": "https://files.arvigeus.one",
+      "logo": "files.svg",
       "hc": "https://cloud.arvigeus.one/status.php",
       "order": 1
     },
@@ -13,6 +14,7 @@
       "subtitle": "Music library",
       "category": "Entertainment",
       "url": "https://music.arvigeus.one",
+      "logo": "music.svg",
       "hc": false
     },
     {
@@ -20,6 +22,7 @@
       "subtitle": "Photo gallery",
       "category": "Productivity",
       "url": "https://photos.arvigeus.one",
+      "logo": "photos.svg",
       "hc": false
     },
     {
@@ -27,6 +30,7 @@
       "subtitle": "Calendar and scheduling",
       "category": "Productivity",
       "url": "https://calendar.arvigeus.one",
+      "logo": "calendar.svg",
       "hc": false
     },
     {
@@ -34,6 +38,7 @@
       "subtitle": "Contact management",
       "category": "Productivity",
       "url": "https://contacts.arvigeus.one",
+      "logo": "contacts.svg",
       "hc": false
     }
   ]

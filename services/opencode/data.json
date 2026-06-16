@@ -5,6 +5,13 @@
       "subtitle": "Browser-based AI coding agent",
       "category": "Productivity",
       "hc": false
+    },
+    {
+      "name": "Vite",
+      "subtitle": "Local development server backed",
+      "category": "Productivity",
+      "logo": "vite.svg",
+      "hc": false
     }
   ]
 }

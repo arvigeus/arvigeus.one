@@ -1,13 +1,13 @@
 services:
   opencode:
-    image: ghcr.io/anomalyco/opencode:latest
+    image: ghcr.io/anomalyco/opencode:1.17.7
     container_name: opencode
     hostname: opencode
     restart: unless-stopped
     user: "${PUID}:${PGID}"
     environment:
       - HOME=/home/opencode
-      - OPENCODE_SERVER_PASSWORD=${BASICAUTH_PASS_PLAIN}
+      - OPENCODE_SERVER_PASSWORD=${BASICAUTH_PASS_PLAIN:-opencode}
       - OPENCODE_SERVER_USERNAME=${BASICAUTH_USER:-opencode}
     volumes:
       - ${DATA}/opencode/home:/home/opencode
