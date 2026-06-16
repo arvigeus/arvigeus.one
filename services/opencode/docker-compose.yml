@@ -7,8 +7,8 @@ services:
     user: "${PUID}:${PGID}"
     environment:
       - HOME=/home/opencode
-      - OPENCODE_SERVER_PASSWORD=${USER}
-      - OPENCODE_SERVER_USERNAME=${PASSWORD}
+      - OPENCODE_SERVER_USERNAME=${USER}
+      - OPENCODE_SERVER_PASSWORD=${PASSWORD}
     volumes:
       - ${DATA}/opencode/home:/home/opencode
       - ${OPENCODE_WORKSPACE}:/workspace
