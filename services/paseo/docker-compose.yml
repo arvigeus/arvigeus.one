@@ -1,26 +1,22 @@
 services:
   dev:
-    image: arvigeus/paseo-dev:0.0.7
+    image: arvigeus/paseo-dev:0.0.8
     container_name: paseo-dev
     hostname: dev
     restart: unless-stopped
     stdin_open: true
     tty: true
+    user: "${PUID}:${PGID}"
     environment:
       - AUTO_UPDATE=true
       - PASEO_LISTEN=0.0.0.0:6767
       - PASEO_HOSTNAMES=dev.${DOMAIN}
       - PASEO_PASSWORD=${PASSWORD}
       - PASEO_CORS_ORIGINS=https://code.${DOMAIN}
-      - OPENCODE_SERVER_PASSWORD=${PASSWORD}
     volumes:
-      - paseo-dev-home:/home/dev
-      - paseo-dev-workspace:/workspace
+      - ${DATA}/paseo/home:/home/dev
+      - ${OPENCODE_WORKSPACE}:/workspace
     working_dir: /workspace
-
-volumes:
-  paseo-dev-home:
-  paseo-dev-workspace:
 
 networks:
   default:

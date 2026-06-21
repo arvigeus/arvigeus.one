@@ -13,15 +13,10 @@
       "url": "https://code.arvigeus.one/"
     },
     {
-      "name": "OpenCode",
-      "subtitle": "The open source AI coding agent",
-      "category": "Productivity",
-      "hc": "https://opencode.arvigeus.one"
-    },
-    {
       "name": "Test",
       "subtitle": "Vite",
       "category": "Productivity",
+      "logo": "vite.svg",
       "hc": false
     }
   ]
