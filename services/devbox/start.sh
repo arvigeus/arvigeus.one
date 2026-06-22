@@ -13,5 +13,5 @@ set +a
 : "${PUID:?PUID is not set in .env}"
 : "${PGID:?PGID is not set in .env}"
 
-sudo mkdir -p "$DATA/paseo/home" "$OPENCODE_WORKSPACE"
-sudo chown -R "$PUID:$PGID" "$DATA/paseo" "$OPENCODE_WORKSPACE"
+sudo mkdir -p "$DATA/devbox/home" "$OPENCODE_WORKSPACE"
+sudo chown -R "$PUID:$PGID" "$DATA/devbox" "$OPENCODE_WORKSPACE"
