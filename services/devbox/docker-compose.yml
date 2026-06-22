@@ -9,9 +9,9 @@ services:
     user: "${PUID}:${PGID}"
     environment:
       - AUTO_UPDATE=true
-      - PASEO_HOSTNAMES=dev.${DOMAIN}
+      - PASEO_HOSTNAMES=paseo-server.${DOMAIN}
       - PASEO_PASSWORD=${PASSWORD}
-      - PASEO_CORS_ORIGINS=https://code.${DOMAIN}
+      - PASEO_CORS_ORIGINS=https://paseo.${DOMAIN}
       - OPENCODE_SERVER_USERNAME=${USER}
       - OPENCODE_SERVER_PASSWORD=${PASSWORD}
     volumes:
