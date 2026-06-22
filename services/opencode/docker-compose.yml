@@ -1,6 +1,6 @@
 services:
   opencode:
-    image: ghcr.io/anomalyco/opencode:1.17.7
+    image: ghcr.io/anomalyco/opencode:1.17.9
     container_name: opencode
     hostname: opencode
     restart: unless-stopped
