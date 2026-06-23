@@ -1,6 +1,6 @@
 services:
   dev:
-    image: arvigeus/devbox:0.2.0
+    image: arvigeus/devbox:0.3.0
     container_name: devbox
     hostname: dev
     restart: unless-stopped
@@ -15,6 +15,7 @@ services:
       - T3CODE_BASE_URL=https://t3code.${DOMAIN}
       - OPENCODE_SERVER_USERNAME=${USER}
       - OPENCODE_SERVER_PASSWORD=${PASSWORD}
+      - XAI_API_KEY=${XAI_API_KEY:-}
     volumes:
       - ${DATA}/devbox/home:/home/dev
       - ${HOST_HOME}/.ssh:/home/dev/.ssh:ro
