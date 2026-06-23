@@ -6,6 +6,13 @@ function cleanup {
 	sudo docker system prune -a --volumes -f
 }
 
+function nuke {
+	sudo sudo systemctl stop docker.service docker.socket
+	sudo rm -rf /var/lib/docker
+	sudo systemctl start docker
+	sudo docker network create caddy_net
+}
+
 function get_services {
 	if [ $# -eq 0 ]; then
 		# Return all services in services/ directory
@@ -25,21 +32,179 @@ function get_services {
 
 function get_container_names {
 	# shellcheck disable=SC2016
-	find services -maxdepth 2 -name docker-compose.yml -print0 \
-		| xargs -0 -r awk -F: '
+	find services -maxdepth 2 -name docker-compose.yml -print0 |
+		xargs -0 -r awk -F: '
 			$1 ~ /^[[:space:]]*container_name[[:space:]]*$/ {
 				name=$2
 				gsub(/^[[:space:]]+|[[:space:]]+$/, "", name)
 				gsub(/^["'\'']|["'\'']$/, "", name)
 				if (name != "") print name
 			}
-		' \
-		| sort -u
+		' |
+		sort -u
 }
 
 function contains_line {
 	local needle="$1"
 	grep -Fxq "$needle"
+}
+
+function load_env {
+	if [ -f "$ENV" ]; then
+		set -a
+		# shellcheck source=/dev/null
+		source <(grep -v '^#' "$ENV" | grep -v '^$')
+		set +a
+	fi
+}
+
+function abs_path {
+	local path="$1"
+	if [ -z "$path" ]; then
+		return 1
+	fi
+
+	if command -v realpath >/dev/null 2>&1; then
+		realpath -m "$path"
+	else
+		(cd "$(dirname "$path")" 2>/dev/null && printf '%s/%s\n' "$PWD" "$(basename "$path")")
+	fi
+}
+
+function show_top_usage {
+	local title="$1"
+	local path="$2"
+	local depth="${3:-1}"
+
+	if [ -z "$path" ] || [ ! -e "$path" ]; then
+		return 0
+	fi
+
+	echo ""
+	echo "$title: $path"
+	du -xhd "$depth" "$path" 2>/dev/null | sort -hr | head -n 25
+}
+
+function space {
+	local command="${1:-report}"
+	local mode="${2:-quick}"
+
+	case "$command" in
+	report | diagnose | usage)
+		load_env
+
+		echo "Disk usage:"
+		df -hT -x tmpfs -x devtmpfs -x overlay 2>/dev/null || df -h
+
+		echo ""
+		echo "Inodes:"
+		df -ih -x tmpfs -x devtmpfs -x overlay 2>/dev/null || df -ih
+
+		if command -v docker >/dev/null 2>&1; then
+			if docker info >/dev/null 2>&1; then
+				echo ""
+				echo "Docker usage:"
+				docker system df
+
+				echo ""
+				echo "Docker details:"
+				docker system df -v
+			else
+				echo ""
+				echo "Docker usage unavailable: docker info failed"
+			fi
+		fi
+
+		data_path=$(abs_path "${DATA:-}") || data_path=""
+		workspace_path=$(abs_path "${HOST_WORKSPACE:-}") || workspace_path=""
+
+		show_top_usage "Project root top usage" "$(pwd)" 1
+		show_top_usage "Configured DATA top usage" "$data_path" 2
+		show_top_usage "Configured HOST_WORKSPACE top usage" "$workspace_path" 2
+		show_top_usage "Home cache top usage" "$HOME/.cache" 1
+		if [ "$mode" = "deep" ]; then
+			show_top_usage "Home local/share top usage" "$HOME/.local/share" 1
+		fi
+
+		echo ""
+		echo "Safe cleanup commands:"
+		echo "  $0 space clean-docker      # stopped containers, dangling images, unused networks, build cache"
+		echo "  $0 space clean-arch        # old pacman package cache, if paccache is available"
+		echo "  $0 space clean-paru        # paru build/package cache, if paru is available"
+		echo "  $0 space clean-journal     # systemd journal older than 7 days"
+		echo "  $0 space clean-apt         # apt package cache, if apt is available"
+		echo "  $0 space clean             # run all safe cleanup commands above"
+		echo "  $0 space report deep       # include slower home local/share scan"
+		echo ""
+		echo "More aggressive existing commands:"
+		echo "  $0 cleanup                 # Docker prune including unused images and volumes"
+		echo "  $0 prune-stale             # remove stale compose containers, then full Docker prune"
+		echo "  $0 nuke                    # delete /var/lib/docker"
+		;;
+	clean-docker)
+		if ! command -v docker >/dev/null 2>&1; then
+			echo "Docker not found."
+			return 0
+		fi
+
+		echo "Pruning safe Docker leftovers..."
+		docker container prune -f
+		docker image prune -f
+		docker network prune -f
+		docker builder prune -f
+		docker system df
+		;;
+	clean-arch)
+		if ! command -v paccache >/dev/null 2>&1; then
+			echo "paccache not found. Install pacman-contrib to prune old pacman packages safely."
+			return 0
+		fi
+
+		echo "Cleaning old pacman package cache..."
+		sudo paccache -rk2
+		sudo paccache -ruk0
+		;;
+	clean-paru)
+		if ! command -v paru >/dev/null 2>&1; then
+			echo "paru not found."
+			return 0
+		fi
+
+		echo "Cleaning paru cache..."
+		paru -Scc --noconfirm
+		;;
+	clean-journal)
+		if ! command -v journalctl >/dev/null 2>&1; then
+			echo "journalctl not found."
+			return 0
+		fi
+
+		echo "Vacuuming systemd journal older than 7 days..."
+		sudo journalctl --vacuum-time=7d
+		;;
+	clean-apt)
+		if ! command -v apt-get >/dev/null 2>&1; then
+			echo "apt-get not found."
+			return 0
+		fi
+
+		echo "Cleaning apt package cache..."
+		sudo apt-get clean
+		sudo apt-get autoremove -y
+		;;
+	clean)
+		space clean-docker
+		space clean-arch
+		space clean-paru
+		space clean-journal
+		space clean-apt
+		space report
+		;;
+	*)
+		echo "Usage: $0 space [report [deep]|clean|clean-docker|clean-arch|clean-paru|clean-journal|clean-apt]"
+		return 1
+		;;
+	esac
 }
 
 function prune-stale {
@@ -343,7 +508,7 @@ function default {
 function help {
 	echo "$0 <task> <args>"
 	echo "Tasks:"
-	compgen -A function | cat -n
+	printf '%s\n' cleanup nuke prune-stale start stop restart update smoke status info space help | cat -n
 }
 
 TIMEFORMAT="Task completed in %3lR"
