@@ -16,11 +16,13 @@ sudo chown -R "$PUID:$PGID" "$DATA/homer"
 declare -A categories
 categories["Entertainment"]="fas fa-music"
 categories["Productivity"]="fas fa-desktop"
+categories["Development"]="fas fa-code"
 categories["System"]="fas fa-cogs"
 
 # Initialize arrays to hold services by category
 declare -a entertainment_services=()
 declare -a productivity_services=()
+declare -a development_services=()
 declare -a system_services=()
 
 # echo "Scanning services for Homer configuration..."
@@ -45,6 +47,11 @@ for service_dir in ../../services/*/; do
     
     # Process each UI entry
     while IFS= read -r entry; do
+        hidden=$(echo "$entry" | jq -r '.hidden // false')
+        if [ "$hidden" = "true" ]; then
+            continue
+        fi
+
         name=$(echo "$entry" | jq -r '.name')
         subtitle=$(echo "$entry" | jq -r '.subtitle // ""')
         category=$(echo "$entry" | jq -r '.category // "System"')
@@ -135,6 +142,9 @@ for service_dir in ../../services/*/; do
             "Productivity")
                 productivity_services+=("$order|$temp_entry")
                 ;;
+            "Development")
+                development_services+=("$order|$temp_entry")
+                ;;
             "System")
                 system_services+=("$order|$temp_entry")
                 ;;
@@ -150,6 +160,7 @@ done
 # Debug: Show what we found
 # echo "Debug: Entertainment services: ${#entertainment_services[@]}"
 # echo "Debug: Productivity services: ${#productivity_services[@]}"
+# echo "Debug: Development services: ${#development_services[@]}"
 # echo "Debug: System services: ${#system_services[@]}"
 
 # Read the base config template
@@ -180,6 +191,20 @@ if [ ${#productivity_services[@]} -gt 0 ]; then
     # Sort by order and include file contents
     IFS=$'\n' sorted_productivity=($(printf '%s\n' "${productivity_services[@]}" | sort -n))
     for service_entry in "${sorted_productivity[@]}"; do
+        temp_file=$(echo "$service_entry" | cut -d'|' -f2-)
+        services_yaml="$services_yaml"$'\n'"$(cat "$temp_file")"
+    done
+    services_yaml="$services_yaml"$'\n'
+fi
+
+# Add Development category if has services
+if [ ${#development_services[@]} -gt 0 ]; then
+    services_yaml="$services_yaml"$'\n'"  - name: \"Development\""
+    services_yaml="$services_yaml"$'\n'"    icon: \"fas fa-code\""
+    services_yaml="$services_yaml"$'\n'"    items:"
+    # Sort by order and include file contents
+    IFS=$'\n' sorted_development=($(printf '%s\n' "${development_services[@]}" | sort -n))
+    for service_entry in "${sorted_development[@]}"; do
         temp_file=$(echo "$service_entry" | cut -d'|' -f2-)
         services_yaml="$services_yaml"$'\n'"$(cat "$temp_file")"
     done

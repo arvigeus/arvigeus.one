@@ -22,10 +22,11 @@ Each service's `data.json` should contain:
     {
       "name": "Service Name",
       "subtitle": "Service description",
-      "category": "Entertainment|Productivity|System",
+      "category": "Entertainment|Productivity|Development|System",
       "logo": "optional/path/to/logo.png",
       "url": "optional_url",
-      "order": 1
+      "order": 1,
+      "hidden": false
     }
   ]
 }
@@ -34,10 +35,11 @@ Each service's `data.json` should contain:
 **Properties:**
 - `name` (required): Display name for the service
 - `subtitle` (optional): Description text
-- `category` (optional): "Entertainment", "Productivity", or "System" (defaults to "System")
+- `category` (optional): "Entertainment", "Productivity", "Development", or "System" (defaults to "System")
 - `logo` (optional): Path to custom logo file relative to service directory
 - `url` (optional): Direct URL (if not provided, auto-detected from caddy.conf)
 - `order` (optional): Numeric sort order within category (defaults to 999, appears last)
+- `hidden` (optional): Set to `true` to exclude the entry from Homer generation
 
 ### 3. Logo Handling
 
@@ -55,7 +57,7 @@ Each service's `data.json` should contain:
 
 ### 5. Configuration Generation
 
-- Groups services by category (Entertainment, Productivity, System)
+- Groups services by category (Entertainment, Productivity, Development, System)
 - **Sorts services by `order` property** within each category (missing order = 999, appears last)
 - Uses temporary files to preserve YAML structure during sorting
 - Generates YAML structure with proper Homer format

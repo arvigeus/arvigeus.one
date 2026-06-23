@@ -1,6 +1,6 @@
 services:
   dev:
-    image: arvigeus/devbox:0.1.1
+    image: arvigeus/devbox:0.2.0
     container_name: devbox
     hostname: dev
     restart: unless-stopped
@@ -12,11 +12,14 @@ services:
       - PASEO_HOSTNAMES=paseo-server.${DOMAIN},dev,localhost,127.0.0.1
       - PASEO_PASSWORD=${PASSWORD}
       - PASEO_CORS_ORIGINS=https://paseo.${DOMAIN}
+      - T3CODE_BASE_URL=https://t3code.${DOMAIN}
       - OPENCODE_SERVER_USERNAME=${USER}
       - OPENCODE_SERVER_PASSWORD=${PASSWORD}
     volumes:
       - ${DATA}/devbox/home:/home/dev
-      - ${OPENCODE_WORKSPACE}:/workspace
+      - ${HOST_HOME}/.ssh:/home/dev/.ssh:ro
+      - ${HOST_HOME}/.gnupg:/home/dev/.gnupg
+      - ${HOST_WORKSPACE}:/workspace
     working_dir: /workspace
 
 networks:

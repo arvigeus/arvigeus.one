@@ -3,20 +3,22 @@
     {
       "name": "Paseo Server",
       "subtitle": "Remote coding agents workspace",
-      "category": "Productivity",
+      "category": "Development",
+      "hidden": true,
       "hc": "https://paseo-server.arvigeus.one/api/health"
     },
     {
       "name": "Paseo Web",
       "subtitle": "Self-hosted Paseo web client",
-      "category": "Productivity",
+      "category": "Development",
       "url": "https://paseo.arvigeus.one/",
-      "logo": "paseo.png"
+      "logo": "paseo.png",
+      "hc": false
     },
     {
       "name": "OpenCode",
       "subtitle": "Browser-based AI coding agent",
-      "category": "Productivity",
+      "category": "Development",
       "url": "https://opencode.arvigeus.one",
       "logo": "opencode.svg",
       "hc": false
@@ -24,7 +26,7 @@
     {
       "name": "T3 Code",
       "subtitle": "Browser-based AI coding workspace",
-      "category": "Productivity",
+      "category": "Development",
       "url": "https://t3code.arvigeus.one",
       "logo": "t3code.png",
       "hc": false
@@ -32,7 +34,7 @@
     {
       "name": "Vite",
       "subtitle": "Local development server backed",
-      "category": "Productivity",
+      "category": "Development",
       "logo": "vite.svg",
       "url": "https://preview.arvigeus.one",
       "hc": false
