@@ -1,6 +1,6 @@
 services:
   dev:
-    image: arvigeus/devbox:0.3.0
+    image: arvigeus/devbox:0.4.0
     container_name: devbox
     hostname: dev
     restart: unless-stopped
@@ -9,9 +9,13 @@ services:
     user: "${PUID}:${PGID}"
     environment:
       - AUTO_UPDATE=true
+      - DEVBOX_AI_TOOLS=codex,opencode
       - PASEO_HOSTNAMES=paseo-server.${DOMAIN},dev,localhost,127.0.0.1
       - PASEO_PASSWORD=${PASSWORD}
       - PASEO_CORS_ORIGINS=https://paseo.${DOMAIN}
+      - PASEO_DICTATION_STT_PROVIDER=openai
+      - PASEO_VOICE_STT_PROVIDER=openai
+      - PASEO_VOICE_TTS_PROVIDER=openai
       - T3CODE_BASE_URL=https://t3code.${DOMAIN}
       - OPENCODE_SERVER_USERNAME=${USER}
       - OPENCODE_SERVER_PASSWORD=${PASSWORD}
