@@ -1,6 +1,6 @@
 services:
   dev:
-    image: arvigeus/devbox:0.4.0
+    image: arvigeus/devbox:0.4.1
     container_name: devbox
     hostname: dev
     restart: unless-stopped
