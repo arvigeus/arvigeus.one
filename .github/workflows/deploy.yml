@@ -92,6 +92,13 @@ jobs:
               fi
             done
 
+            # Rebuild Homer whenever service dashboard metadata changes.
+            if echo "$CHANGED_FILES" | grep -qE '^services/[^/]+/(data\.json|logo\.(png|svg))$'; then
+              if ! echo " $ACTIVE_CHANGED_SERVICES " | grep -q ' homer '; then
+                ACTIVE_CHANGED_SERVICES="$ACTIVE_CHANGED_SERVICES homer"
+              fi
+            fi
+
             if [ -n "$ACTIVE_CHANGED_SERVICES" ]; then
               echo "Updating changed services:$ACTIVE_CHANGED_SERVICES"
               # shellcheck disable=SC2086

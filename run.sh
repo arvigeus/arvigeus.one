@@ -116,11 +116,11 @@ function space {
 		fi
 
 		data_path=$(abs_path "${DATA:-}") || data_path=""
-		workspace_path=$(abs_path "${HOST_WORKSPACE:-}") || workspace_path=""
+		projects_path=$(abs_path "${HOST_PROJECTS:-}") || projects_path=""
 
 		show_top_usage "Project root top usage" "$(pwd)" 1
 		show_top_usage "Configured DATA top usage" "$data_path" 2
-		show_top_usage "Configured HOST_WORKSPACE top usage" "$workspace_path" 2
+		show_top_usage "Configured HOST_PROJECTS top usage" "$projects_path" 2
 		show_top_usage "Home cache top usage" "$HOME/.cache" 1
 		if [ "$mode" = "deep" ]; then
 			show_top_usage "Home local/share top usage" "$HOME/.local/share" 1
@@ -355,6 +355,18 @@ function update {
 
 	# Get services to update (only Docker services)
 	services=$(get_services "$@") || return 1
+
+	# Run idempotent setup hooks before recreating containers. This is also
+	# required when a service is deployed for the first time via `update`.
+	echo "Running service setup scripts..."
+	while IFS= read -r service_dir; do
+		[ -z "$service_dir" ] && continue
+		service_name=$(basename "$service_dir")
+		if [ -f "$service_dir/start.sh" ]; then
+			echo "Running start script for $service_name..."
+			(cd "$service_dir" && ./start.sh)
+		fi
+	done <<<"$services"
 
 	# Build compose file list for Docker services only
 	compose_files=""

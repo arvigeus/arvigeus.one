@@ -1,0 +1,13 @@
+{
+  "ui": [
+    {
+      "name": "Syntaxis",
+      "subtitle": "Mobile-first development workspace",
+      "category": "Development",
+      "logo": "logo.svg",
+      "url": "https://code.arvigeus.one",
+      "hc": "https://code.arvigeus.one",
+      "order": 1
+    }
+  ]
+}

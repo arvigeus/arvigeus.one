@@ -1,0 +1,43 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Syntaxis app logo</title>
+  <desc id="desc">Rounded square app icon with the word syntaxis and a red wavy spelling-error underline.</desc>
+
+  <rect width="1024" height="1024" rx="190" fill="#161718"/>
+
+  <text
+    x="512"
+    y="545"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-size="178"
+    font-weight="800"
+    letter-spacing="-8"
+    fill="#FFFFFF">syntaxis</text>
+
+  <path
+    d="M142 642
+       C162 642 162 622 182 622
+       C202 622 202 642 222 642
+       C242 642 242 622 262 622
+       C282 622 282 642 302 642
+       C322 642 322 622 342 622
+       C362 622 362 642 382 642
+       C402 642 402 622 422 622
+       C442 622 442 642 462 642
+       C482 642 482 622 502 622
+       C522 622 522 642 542 642
+       C562 642 562 622 582 622
+       C602 622 602 642 622 642
+       C642 642 642 622 662 622
+       C682 622 682 642 702 642
+       C722 642 722 622 742 622
+       C762 622 762 642 782 642
+       C802 642 802 622 822 622
+       C842 622 842 642 862 642
+       C882 642 882 622 902 622"
+    stroke="#FF4050"
+    stroke-width="26"
+    stroke-linecap="round"
+    stroke-linejoin="round"/>
+</svg>
