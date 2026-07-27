@@ -1,6 +1,6 @@
 services:
   syntaxis:
-    image: ghcr.io/katawaredev/syntaxis:0.1.0
+    image: ghcr.io/katawaredev/syntaxis:0.2.0
     container_name: syntaxis
     hostname: syntaxis
     restart: unless-stopped
@@ -11,6 +11,8 @@ services:
       IP: 0.0.0.0
       PORT: 8080
       SYNTAXIS_PROJECTS_ROOT: /Projects
+      SYNTAXIS_PASSWORD_HASH: "${SYNTAXIS_PASSWORD_HASH:?SYNTAXIS_PASSWORD_HASH is required}"
+      SYNTAXIS_API_TOKEN: "${SYNTAXIS_API_TOKEN:-}"
       VERCEL_OIDC_TOKEN: "${VERCEL_OIDC_TOKEN:-}"
     volumes:
       - ${DATA}/syntaxis/home:/home/dev
@@ -19,7 +21,8 @@ services:
       - ${HOST_PROJECTS:-${HOST_HOME}/Projects}:/Projects
     working_dir: /Projects
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/"]
+      test:
+        ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health"]
       interval: 30s
       timeout: 5s
       retries: 3
