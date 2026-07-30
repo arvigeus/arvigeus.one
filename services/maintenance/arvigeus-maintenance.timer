@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Arvigeus VPS storage maintenance weekly
+
+[Timer]
+OnCalendar=Sun *-*-* 04:00:00
+Persistent=true
+RandomizedDelaySec=30m
+Unit=arvigeus-maintenance.service
+
+[Install]
+WantedBy=timers.target

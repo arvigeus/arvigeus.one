@@ -1,9 +1,31 @@
 #!/bin/bash
 
+set -euo pipefail
+
 ENV=.env # Do not touch
+# Keep targeted Compose operations in the same project as full-stack operations.
+# This matches the project label on the existing VPS containers.
+COMPOSE_PROJECT="caddy"
 
 function cleanup {
 	sudo docker system prune -a --volumes -f
+}
+
+function run_privileged {
+	if [ "$EUID" -eq 0 ]; then
+		"$@"
+	else
+		sudo "$@"
+	fi
+}
+
+function maintenance {
+	if [ ! -x /usr/local/sbin/arvigeus-maintenance ]; then
+		echo "ERROR: Automated maintenance is not installed." >&2
+		echo "Run ./run.sh start maintenance first." >&2
+		return 1
+	fi
+	run_privileged /usr/local/sbin/arvigeus-maintenance
 }
 
 function nuke {
@@ -82,7 +104,7 @@ function show_top_usage {
 
 	echo ""
 	echo "$title: $path"
-	du -xhd "$depth" "$path" 2>/dev/null | sort -hr | head -n 25
+	du -xhd "$depth" "$path" 2>/dev/null | sort -hr | head -n 25 || true
 }
 
 function space {
@@ -147,11 +169,11 @@ function space {
 			return 0
 		fi
 
-		echo "Pruning safe Docker leftovers..."
-		docker container prune -f
+		echo "Pruning conservative Docker leftovers..."
+		docker container prune -f --filter "until=168h"
 		docker image prune -f
-		docker network prune -f
-		docker builder prune -f
+		docker network prune -f --filter "until=168h"
+		docker buildx prune -f --max-used-space 2gb
 		docker system df
 		;;
 	clean-arch)
@@ -180,7 +202,7 @@ function space {
 		fi
 
 		echo "Vacuuming systemd journal older than 7 days..."
-		sudo journalctl --vacuum-time=7d
+		sudo journalctl --vacuum-time=30d --vacuum-size=1G
 		;;
 	clean-apt)
 		if ! command -v apt-get >/dev/null 2>&1; then
@@ -190,7 +212,6 @@ function space {
 
 		echo "Cleaning apt package cache..."
 		sudo apt-get clean
-		sudo apt-get autoremove -y
 		;;
 	clean)
 		space clean-docker
@@ -238,8 +259,11 @@ function prune-stale {
 		docker rm -f "${stale_containers[@]}"
 	fi
 
-	docker system prune -a --volumes -f
-	echo "Prune completed!"
+	# Deployment cleanup is intentionally conservative. Weekly maintenance
+	# handles old tagged images and bounds build cache without touching volumes.
+	docker image prune -f
+	docker network prune -f --filter "until=168h"
+	echo "Stale resource cleanup completed!"
 }
 
 function start {
@@ -278,7 +302,7 @@ function start {
 	if [ -n "$compose_files" ]; then
 		echo "Starting Docker services:$docker_services"
 		# shellcheck disable=SC2086
-		docker compose --env-file "$ENV" $compose_files up -d --build
+		docker compose --project-name "$COMPOSE_PROJECT" --env-file "$ENV" $compose_files up -d --build
 
 		# Show caddy logs if it was started
 		if echo "$docker_services" | grep -q "caddy"; then
@@ -317,7 +341,7 @@ function stop {
 	if [ -n "$compose_files" ]; then
 		echo "Stopping Docker services:$docker_services"
 		# shellcheck disable=SC2086
-		docker compose --env-file "$ENV" $compose_files down
+		docker compose --project-name "$COMPOSE_PROJECT" --env-file "$ENV" $compose_files down
 	else
 		echo "No Docker services to stop."
 	fi
@@ -383,13 +407,12 @@ function update {
 		echo "Updating Docker services:$docker_services"
 		echo "Pulling latest images..."
 		# shellcheck disable=SC2086
-		docker compose --env-file "$ENV" $compose_files pull
+		docker compose --project-name "$COMPOSE_PROJECT" --env-file "$ENV" $compose_files pull --ignore-buildable
 
-		echo "Updating services..."
+		echo "Building and updating services..."
 		# shellcheck disable=SC2086
-		docker compose --env-file "$ENV" $compose_files up --detach
+		docker compose --project-name "$COMPOSE_PROJECT" --env-file "$ENV" $compose_files up --detach --build
 
-		docker system prune -a --volumes -f
 		echo "Docker services updated!"
 	else
 		echo "No Docker services to update."
@@ -403,6 +426,9 @@ function smoke {
 	source <(grep -v '^#' "$ENV" | grep -v '^$')
 	set +a
 
+	DOMAIN="${DOMAIN:-}"
+	BASICAUTH_USER="${BASICAUTH_USER:-}"
+	BASICAUTH_PASS_PLAIN="${BASICAUTH_PASS_PLAIN:-}"
 	if [ -z "$DOMAIN" ]; then
 		echo "ERROR: DOMAIN not set in $ENV"
 		return 1
@@ -520,7 +546,7 @@ function default {
 function help {
 	echo "$0 <task> <args>"
 	echo "Tasks:"
-	printf '%s\n' cleanup nuke prune-stale start stop restart update smoke status info space help | cat -n
+	printf '%s\n' cleanup maintenance nuke prune-stale start stop restart update smoke status info space help | cat -n
 }
 
 TIMEFORMAT="Task completed in %3lR"

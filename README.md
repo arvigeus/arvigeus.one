@@ -11,6 +11,7 @@ services/                    # Active services
 ├── caddy/          [Docker] # Reverse proxy with auto-config
 ├── homer/          [Docker] # Dashboard with auto-generation
 ├── cockpit/        [Scripts]# System management (systemd service)
+├── maintenance/    [Scripts]# Weekly storage and log retention
 ├── nextcloud/      [Caddy]  # External service redirects
 └── ... (other services)
 
@@ -55,6 +56,7 @@ cp .env.example .env
 ./run.sh restart                  # Restart all services
 ./run.sh update                   # Update all services
 ./run.sh status                   # Show service status
+./run.sh maintenance              # Run the automated maintenance job now
 
 # Individual services
 ./run.sh start caddy homer        # Start specific services
@@ -85,6 +87,41 @@ mv disabled/joplin services/      # Enable service
 - **GitHub Actions**: Auto-deploys on service changes
 - **Smart Restart**: Only restarts services when `services/` directory changes
 - **Git Safety**: Validates repository state before deployment
+
+### Automated maintenance
+
+The `maintenance` service installs a persistent systemd timer. It runs weekly
+on Sunday around 04:00, with up to 30 minutes of randomized delay. Missed runs
+execute after the server starts.
+
+Post-deploy cleanup is deliberately small: it removes stale Compose
+containers, dangling images, and old unused networks. It does not prune
+volumes, tagged rollback images, or the build cache.
+
+The weekly job applies the retention policy:
+
+- stopped containers: 7 days;
+- unused tagged images: 30 days;
+- Docker build cache: bounded to 2 GB using least-recently-used eviction;
+- systemd journal: at most 30 days and 1 GB, with 5 GB kept free;
+- downloaded APT packages: removed;
+- Docker JSON logs: 10 MB per file and 3 files per container.
+
+No automated command removes Docker volumes or runs `apt autoremove`.
+
+Useful commands:
+
+```bash
+systemctl list-timers arvigeus-maintenance.timer
+systemctl status arvigeus-maintenance.timer
+sudo systemctl start arvigeus-maintenance.service
+./run.sh maintenance
+./run.sh space report
+```
+
+`./run.sh cleanup` remains an explicitly destructive emergency command: it
+removes all unused Docker images, build cache, and anonymous volumes. It is not
+part of deployment or scheduled maintenance.
 
 ## Adding New Services
 
@@ -323,13 +360,6 @@ check_alert() {
 
 ALERT=$(check_alert)
 
-# Try reclaiming space from Docker if needed
-if [ -n "$ALERT" ]; then
-  docker system prune -f >/dev/null 2>&1
-fi
-
-ALERT=$(check_alert)
-
 # Send email if any filesystem is over threshold
 if [ -n "$ALERT" ]; then
   echo "Subject: [Alert] Disk Space Warning on $(hostname)
@@ -343,15 +373,8 @@ $(df -h | grep -vE '^Filesystem|tmpfs|cdrom|udev|overlay')
 
 Suggested actions:
 
-    docker system prune -a --volumes -f
-
-OR
-
-    sudo systemctl stop docker
-    sudo rm -rf /var/lib/docker
-    sudo docker network create caddy_net
-    sudo systemctl start docker
-    ./run.sh start
+    /usr/local/sbin/arvigeus-maintenance
+    cd /home/arvigeus/arvigeus.one && ./run.sh space report deep
 
 ---
 Sent from $(hostname) at $(date)" | /usr/sbin/sendmail $EMAIL

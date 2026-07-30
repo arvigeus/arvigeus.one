@@ -1,0 +1,10 @@
+[Unit]
+Description=Arvigeus VPS storage maintenance
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/arvigeus-maintenance
+Nice=10
+IOSchedulingClass=idle

@@ -21,7 +21,7 @@ jobs:
           username: arvigeus
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/arvigeus/arvigeus.one
+            cd /home/arvigeus/arvigeus.one || exit 1
 
             # Check if repository is dirty (has uncommitted changes)
             if ! git diff-index --quiet HEAD --; then
@@ -48,18 +48,38 @@ jobs:
             echo "Fetching latest changes..."
             git fetch origin master
 
-            # Check if we're behind
             LOCAL=$(git rev-parse HEAD)
             REMOTE=$(git rev-parse origin/master)
+            DEPLOY_STATE_FILE=$(git rev-parse --git-path last-successful-deploy)
+            LAST_DEPLOYED=""
 
-            if [ "$LOCAL" = "$REMOTE" ]; then
-              echo "Repository is already up to date"
-              exit 0
+            if [ -f "$DEPLOY_STATE_FILE" ]; then
+              LAST_DEPLOYED=$(cat "$DEPLOY_STATE_FILE")
             fi
 
-            # Check what will change before pulling
-            CHANGED_FILES=$(git diff --name-only HEAD origin/master)
-            CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^services/' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+            # Diff from the last deployment that passed its smoke tests, not
+            # merely from the current checkout. If a previous run pulled the
+            # commit and then failed, rerunning the workflow retries the same
+            # affected services instead of exiting early.
+            if [ -n "$LAST_DEPLOYED" ] &&
+              git cat-file -e "$LAST_DEPLOYED^{commit}" 2>/dev/null &&
+              git merge-base --is-ancestor "$LAST_DEPLOYED" "$REMOTE"; then
+              echo "Last successful deployment: $LAST_DEPLOYED"
+              CHANGED_FILES=$(git diff --name-only "$LAST_DEPLOYED" "$REMOTE")
+            elif [ "$LOCAL" != "$REMOTE" ]; then
+              echo "No deployment state yet; using current checkout $LOCAL as the baseline"
+              CHANGED_FILES=$(git diff --name-only "$LOCAL" "$REMOTE")
+            else
+              echo "No usable deployment state and checkout is current; reconciling every active service"
+              CHANGED_FILES=$(git ls-tree -r --name-only "$REMOTE")
+            fi
+
+            CHANGED_SERVICES=$(
+              printf '%s\n' "$CHANGED_FILES" |
+                awk -F/ '$1 == "services" && $2 != "" { print $2 }' |
+                sort -u |
+                tr '\n' ' '
+            )
 
             REMOVED_SERVICES=""
             for service in $CHANGED_SERVICES; do
@@ -69,20 +89,30 @@ jobs:
             done
 
             if [ -n "$REMOVED_SERVICES" ]; then
-              echo "Stopping removed services before pulling:$REMOVED_SERVICES"
-              # shellcheck disable=SC2086
-              if ! ./run.sh stop $REMOVED_SERVICES; then
-                echo "ERROR: Failed to stop removed services"
-                exit 1
+              STOPPABLE_REMOVED_SERVICES=""
+              for service in $REMOVED_SERVICES; do
+                if [ -d "services/$service" ]; then
+                  STOPPABLE_REMOVED_SERVICES="$STOPPABLE_REMOVED_SERVICES $service"
+                fi
+              done
+              if [ -n "$STOPPABLE_REMOVED_SERVICES" ]; then
+                echo "Stopping removed services before pulling:$STOPPABLE_REMOVED_SERVICES"
+                # shellcheck disable=SC2086
+                if ! ./run.sh stop $STOPPABLE_REMOVED_SERVICES; then
+                  echo "ERROR: Failed to stop removed services"
+                  exit 1
+                fi
               fi
             fi
 
-            # Attempt to pull
-            echo "Pulling changes..."
-            if ! git pull origin master; then
-              echo "Git pull failed - there may be merge conflicts"
-              echo "Manual intervention required on server"
-              exit 1
+            if [ "$LOCAL" != "$REMOTE" ]; then
+              echo "Fast-forwarding checkout to $REMOTE..."
+              if ! git merge --ff-only origin/master; then
+                echo "Git fast-forward failed; manual intervention required"
+                exit 1
+              fi
+            else
+              echo "Checkout already at $REMOTE; reconciling deployment state"
             fi
 
             ACTIVE_CHANGED_SERVICES=""
@@ -133,4 +163,6 @@ jobs:
               echo "ERROR: Smoke test failed"
               exit 1
             fi
+
+            printf '%s\n' "$REMOTE" > "$DEPLOY_STATE_FILE"
             echo "Deployment successful!"
