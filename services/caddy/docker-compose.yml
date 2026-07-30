@@ -1,6 +1,9 @@
 services:
   caddy:
-    image: caddy:2.11.4
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: arvigeus-caddy:2.11.4-hetzner-v2.0.1
     container_name: caddy
     restart: unless-stopped
     hostname: caddy
@@ -13,6 +16,7 @@ services:
       - DOMAIN
       - BASICAUTH_USER
       - BASICAUTH_PASS
+      - HETZNER_API_TOKEN
     volumes:
       - ${SERVICES}/caddy/config/Caddyfile:/etc/caddy/Caddyfile:ro
       - ${DATA}/caddy/data:/data

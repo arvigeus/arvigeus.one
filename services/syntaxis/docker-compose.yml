@@ -1,6 +1,6 @@
 services:
   syntaxis:
-    image: ghcr.io/katawaredev/syntaxis:0.3.1
+    image: ghcr.io/katawaredev/syntaxis:0.4.0
     container_name: syntaxis
     hostname: syntaxis
     restart: unless-stopped
@@ -14,6 +14,9 @@ services:
       SYNTAXIS_PASSWORD_HASH: "${SYNTAXIS_PASSWORD_HASH:?SYNTAXIS_PASSWORD_HASH is required}"
       SYNTAXIS_API_TOKEN: "${SYNTAXIS_API_TOKEN:-}"
       VERCEL_OIDC_TOKEN: "${VERCEL_OIDC_TOKEN:-}"
+      SYNTAXIS_PREVIEW_ORIGIN: "https://preview.code.${DOMAIN}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ${DATA}/syntaxis/home:/home/dev
       - ${HOST_HOME}/.ssh:/home/dev/.ssh:ro
