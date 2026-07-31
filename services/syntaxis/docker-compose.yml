@@ -1,6 +1,6 @@
 services:
   syntaxis:
-    image: ghcr.io/katawaredev/syntaxis:0.4.0
+    image: ghcr.io/katawaredev/syntaxis:0.4.1
     container_name: syntaxis
     hostname: syntaxis
     restart: unless-stopped
@@ -19,6 +19,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ${DATA}/syntaxis/home:/home/dev
+      - ${HOST_HOME}/.gitconfig:/home/dev/.gitconfig:ro
       - ${HOST_HOME}/.ssh:/home/dev/.ssh:ro
       - ${HOST_HOME}/.gnupg:/home/dev/.gnupg
       - ${HOST_PROJECTS:-${HOST_HOME}/Projects}:/Projects
