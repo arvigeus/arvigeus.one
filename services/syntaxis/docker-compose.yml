@@ -4,6 +4,16 @@ services:
     container_name: syntaxis
     hostname: syntaxis
     restart: unless-stopped
+    cpus: "1.50"
+    mem_limit: 2560m
+    memswap_limit: 2560m
+    pids_limit: 256
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     user: "${PUID}:${PGID}"
     environment:
       HOME: /home/dev
