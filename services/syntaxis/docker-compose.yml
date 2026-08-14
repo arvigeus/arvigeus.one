@@ -1,6 +1,6 @@
 services:
   syntaxis:
-    image: ghcr.io/katawaredev/syntaxis:0.7.0
+    image: ghcr.io/katawaredev/syntaxis:0.8.0
     container_name: syntaxis
     hostname: syntaxis
     restart: unless-stopped
