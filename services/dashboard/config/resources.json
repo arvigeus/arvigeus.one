@@ -1,0 +1,20 @@
+[
+  {
+    "name": "r/selfhosted",
+    "subtitle": "Self-Hosted Alternatives to Popular Services",
+    "logo": "icons/r_selfhosted.png",
+    "url": "https://www.reddit.com/r/selfhosted/"
+  },
+  {
+    "name": "awesome-selfhosted",
+    "subtitle": "A list of Free Software network services and web applications which can be hosted on your own servers",
+    "logo": "icons/awesome.svg",
+    "url": "https://github.com/awesome-selfhosted/awesome-selfhosted"
+  },
+  {
+    "name": "StarWhiz / docker_deployment_notes",
+    "subtitle": "Caddy v2 examples and guide",
+    "logo": "icons/github.png",
+    "url": "https://github.com/StarWhiz/docker_deployment_notes"
+  }
+]

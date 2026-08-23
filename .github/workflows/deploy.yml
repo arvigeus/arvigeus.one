@@ -122,10 +122,10 @@ jobs:
               fi
             done
 
-            # Rebuild Homer whenever service dashboard metadata changes.
+            # Regenerate the static dashboard whenever service metadata changes.
             if echo "$CHANGED_FILES" | grep -qE '^services/[^/]+/(data\.json|logo\.(png|svg))$'; then
-              if ! echo " $ACTIVE_CHANGED_SERVICES " | grep -q ' homer '; then
-                ACTIVE_CHANGED_SERVICES="$ACTIVE_CHANGED_SERVICES homer"
+              if ! echo " $ACTIVE_CHANGED_SERVICES " | grep -q ' dashboard '; then
+                ACTIVE_CHANGED_SERVICES="$ACTIVE_CHANGED_SERVICES dashboard"
               fi
             fi
 

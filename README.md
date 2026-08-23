@@ -9,7 +9,7 @@ A modular self-hosted setup using Docker Compose with automated service manageme
 ```
 services/                    # Active services
 ├── caddy/          [Docker] # Reverse proxy with auto-config
-├── homer/          [Docker] # Dashboard with auto-generation
+├── dashboard/      [Static] # Static dashboard generated from data.json
 ├── cockpit/        [Scripts]# System management (systemd service)
 ├── maintenance/    [Scripts]# Weekly storage and log retention
 ├── nextcloud/      [Caddy]  # External service redirects
@@ -27,6 +27,7 @@ disabled/                    # Disabled services
 - **[Scripts]**: System services managed only via start.sh/stop.sh
 - **[Caddy]**: External services with only reverse proxy config
 - **[Mixed]**: Docker services with additional start.sh/stop.sh scripts
+- **[Static]**: No container — scripts generate static files served directly by Caddy
 
 ## Quick Start
 
@@ -59,7 +60,7 @@ cp .env.example .env
 ./run.sh maintenance              # Run the automated maintenance job now
 
 # Individual services
-./run.sh start caddy homer        # Start specific services
+./run.sh start caddy dashboard    # Start specific services
 ./run.sh stop vaultwarden         # Stop specific service
 
 # Enable/disable services
@@ -71,7 +72,7 @@ mv disabled/joplin services/      # Enable service
 
 ### Automated Configuration
 
-- **Homer Dashboard**: Auto-generates from service `data.json` files
+- **Static Dashboard**: Auto-generated from service `data.json` files, no container needed
 - **Caddy Reverse Proxy**: Auto-imports service-specific configurations
 - **URL Auto-Detection**: Extracts URLs from Caddy configs automatically
 - **Logo Management**: Auto-copies and organizes service icons
@@ -153,7 +154,7 @@ myservice.\{\$DOMAIN\} {
 }
 EOF
 
-# 4. Create Homer configuration
+# 4. Add a dashboard entry
 cat > services/myservice/data.json << EOF
 {
   "ui": [
@@ -191,7 +192,7 @@ echo "Stopping my service..."
 sudo systemctl stop myservice
 EOF
 
-# 4. Make scripts executable and add to Homer
+# 4. Make scripts executable and add a dashboard entry in data.json
 chmod +x services/myservice/{start,stop}.sh
 # Add data.json and caddy.conf as needed
 ```
@@ -439,7 +440,7 @@ docker network inspect caddy_net
 - **404/502 errors**: Service may still be starting up
 - **SSL issues**: Check DNS API token and domain configuration
 - **Missing URLs**: Verify caddy.conf has correct subdomain pattern
-- **Homer not updating**: Check data.json format and run `./run.sh restart homer`
+- **Dashboard not updating**: Check data.json format and run `./run.sh restart caddy dashboard`
 
 ### File Permissions
 

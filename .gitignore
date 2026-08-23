@@ -2,3 +2,4 @@
 .env.local
 config/caddy/caddy
 data
+services/dashboard/public/

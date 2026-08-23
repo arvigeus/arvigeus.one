@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard</title>
+<style>
+	:root {
+		--bg: #131313;
+		--card: #1e1e1e;
+		--card-hover: #2b2b2b;
+		--text: #eaeaea;
+		--muted: #9a9a9a;
+		--accent: #4285f4;
+	}
+	* { box-sizing: border-box; }
+	body {
+		margin: 0;
+		padding: 2rem 1rem 3rem;
+		background: var(--bg);
+		color: var(--text);
+		font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	}
+	header { text-align: center; margin-bottom: 2.5rem; }
+	h1 { font-size: 1.6rem; margin: 0; font-weight: 600; }
+	main { max-width: 64rem; margin: 0 auto; }
+	h2 {
+		font-size: .85rem;
+		text-transform: uppercase;
+		letter-spacing: .12em;
+		color: var(--muted);
+		margin: 2rem 0 .75rem;
+	}
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+		gap: .75rem;
+	}
+	a.card {
+		display: flex;
+		align-items: center;
+		gap: .75rem;
+		padding: .85rem 1rem;
+		background: var(--card);
+		border-radius: .6rem;
+		text-decoration: none;
+		color: var(--text);
+		border: 1px solid transparent;
+		transition: background .15s, border-color .15s;
+	}
+	a.card:hover { background: var(--card-hover); border-color: var(--accent); }
+	img.icon {
+		width: 2.25rem;
+		height: 2.25rem;
+		object-fit: contain;
+		flex-shrink: 0;
+		background: #fff;
+		border-radius: .4rem;
+		padding: .2rem;
+	}
+	span.fallback {
+		width: 2.25rem;
+		height: 2.25rem;
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: var(--accent);
+		color: #fff;
+		font-weight: 600;
+		border-radius: .4rem;
+	}
+	.name { font-weight: 500; line-height: 1.2; }
+	.subtitle { font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+	footer { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 3rem; }
+</style>
+</head>
+<body>
+<header><h1>Dashboard</h1></header>
+<main>
+__SERVICES_HTML__
+</main>
+<footer>__DOMAIN__</footer>
+</body>
+</html>
