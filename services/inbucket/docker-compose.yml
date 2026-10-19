@@ -1,6 +1,6 @@
 services:
   inbucket:
-    image: inbucket/inbucket:3.1.1
+    image: inbucket/inbucket:3.2.0
     container_name: inbucket
     hostname: inbucket
     restart: unless-stopped
